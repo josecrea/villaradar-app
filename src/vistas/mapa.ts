@@ -27,7 +27,27 @@ async function abrirMapa(contenedor: HTMLElement, conCoordenadas: Item[]): Promi
 
   if (conCoordenadas.length === 0) return;
 
-  const L = await import("leaflet");
+  // El CSS base de Leaflet es imprescindible: sin él los panes no son
+  // position:absolute y las teselas se desparraman por toda la página.
+  await import("leaflet/dist/leaflet.css");
+  const [L, iconUrl, iconUrl2x, shadowUrl] = await Promise.all([
+    import("leaflet"),
+    import("leaflet/dist/images/marker-icon.png"),
+    import("leaflet/dist/images/marker-icon-2x.png"),
+    import("leaflet/dist/images/marker-shadow.png"),
+  ]);
+  // Con bundlers, el icono por defecto de Leaflet referencia rutas relativas
+  // que no existen tras el build: hay que apuntarlo a los assets importados.
+  const iconoPorDefecto = L.icon({
+    iconUrl: iconUrl.default,
+    iconRetinaUrl: iconUrl2x.default,
+    shadowUrl: shadowUrl.default,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+  });
+
   const mapa = L.map(mapaDiv, { scrollWheelZoom: false }).setView(
     [conCoordenadas[0].lat as number, conCoordenadas[0].lng as number],
     11,
@@ -38,6 +58,6 @@ async function abrirMapa(contenedor: HTMLElement, conCoordenadas: Item[]): Promi
   }).addTo(mapa);
 
   for (const item of conCoordenadas) {
-    L.marker([item.lat as number, item.lng as number]).addTo(mapa).bindPopup(item.titulo);
+    L.marker([item.lat as number, item.lng as number], { icon: iconoPorDefecto }).addTo(mapa).bindPopup(item.titulo);
   }
 }
