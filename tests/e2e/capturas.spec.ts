@@ -15,7 +15,12 @@ async function entraYLogin(page: import("@playwright/test").Page) {
 
 test("captura de pantalla con datos cargados", async ({ page }, testInfo) => {
   await entraYLogin(page);
-  await page.waitForTimeout(100);
+  // En 1440 se abre el mapa antes de capturar para mostrar los pines reales.
+  if (testInfo.project.name === "1440") {
+    await page.locator(".boton-abrir-mapa").click();
+    await page.waitForSelector("#mapa-leaflet .leaflet-marker-icon", { timeout: 5000 }).catch(() => undefined);
+  }
+  await page.waitForTimeout(150);
   await page.screenshot({ path: `docs/capturas/captacion-${testInfo.project.name}.png`, fullPage: true });
 });
 
@@ -28,6 +33,43 @@ test("sin desbordamiento horizontal con datos cargados", async ({ page }, testIn
     clientWidth: document.documentElement.clientWidth,
   }));
   expect(scrollWidth, `scrollWidth=${scrollWidth} clientWidth=${clientWidth}`).toBeLessThanOrEqual(clientWidth);
+});
+
+test("franja de mando: ningún rótulo de KPI se solapa (320/390)", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "320" && testInfo.project.name !== "390", "solo aplica en móvil");
+  await entraYLogin(page);
+  const rects = await page.locator(".cifra-mando .etiqueta").evaluateAll((nodos) =>
+    nodos.map((n) => n.getBoundingClientRect()).map((r) => ({ top: r.top, bottom: r.bottom, left: r.left, right: r.right })),
+  );
+  expect(rects.length).toBeGreaterThan(0);
+  for (let i = 0; i < rects.length; i++) {
+    for (let j = i + 1; j < rects.length; j++) {
+      const a = rects[i];
+      const b = rects[j];
+      const solapan = a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+      expect(solapan, `rótulo ${i} y ${j} se solapan: ${JSON.stringify(a)} vs ${JSON.stringify(b)}`).toBe(false);
+    }
+  }
+  // Además, cada rótulo debe caber en su propia tarjeta sin desbordar.
+  const desbordes = await page.locator(".cifra-mando").evaluateAll((nodos) =>
+    nodos.filter((n) => n.scrollWidth > n.clientWidth + 1).length,
+  );
+  expect(desbordes).toBe(0);
+});
+
+test("kanban a 1440: ninguna tarjeta desborda su columna", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "1440", "el kanban solo se muestra en ≥1200px");
+  await entraYLogin(page);
+  const columnas = page.locator(".kanban-columna");
+  const n = await columnas.count();
+  for (let i = 0; i < n; i++) {
+    const columna = columnas.nth(i);
+    const anchoColumna = await columna.evaluate((c) => c.clientWidth);
+    const desbordes = await columna
+      .locator(".kanban-tarjeta")
+      .evaluateAll((tarjetas, ancho) => tarjetas.filter((t) => t.scrollWidth > ancho + 1).map((t) => t.textContent), anchoColumna);
+    expect(desbordes, JSON.stringify(desbordes)).toHaveLength(0);
+  }
 });
 
 test("accesibilidad: 0 violaciones serious/critical", async ({ page }) => {
