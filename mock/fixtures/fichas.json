@@ -4,8 +4,8 @@
     "scoreReasons": ["bajada de precio del 6% en 30 dias", "zona Adeje con alta rotacion", "anunciante particular"],
     "margen2x1": null,
     "historicoPrecios": [
-      { "fecha": "2026-09-01", "precio": 452000 },
-      { "fecha": "2026-10-10", "precio": 425000 }
+      { "fecha": "2026-10-10", "precio": 425000 },
+      { "fecha": "2026-09-01", "precio": 452000 }
     ],
     "eventos": [
       { "tipo": "novedad", "at": "2026-10-15T09:00:00Z" }
@@ -25,10 +25,14 @@
   "guia-isora-007": {
     "descripcion": "Villa de 240 m2 con piscina privada y parcela de 1000 m2. tel. oculto.",
     "scoreReasons": ["precio estable", "superficie por encima de la media", "piscina privada"],
-    "margen2x1": ["ubicacion compatible con segunda unidad", "parcela suficiente segun normativa"],
+    "margen2x1": {
+      "verdict": "viable",
+      "marginPct": 18.4,
+      "razones": ["tipología apta", "precio dentro de rango", "superficie amplia"]
+    },
     "historicoPrecios": [
-      { "fecha": "2026-08-01", "precio": 610000 },
-      { "fecha": "2026-10-01", "precio": 610000 }
+      { "fecha": "2026-10-01", "precio": 610000 },
+      { "fecha": "2026-08-01", "precio": 610000 }
     ],
     "eventos": [
       { "tipo": "novedad", "at": "2026-10-05T09:00:00Z" },
@@ -40,8 +44,8 @@
     "scoreReasons": ["bajada de precio", "parcela amplia", "zona tranquila"],
     "margen2x1": null,
     "historicoPrecios": [
-      { "fecha": "2026-08-15", "precio": 210000 },
-      { "fecha": "2026-10-01", "precio": 198000 }
+      { "fecha": "2026-10-01", "precio": 198000 },
+      { "fecha": "2026-08-15", "precio": 210000 }
     ],
     "eventos": [{ "tipo": "cambio_estado", "at": "2026-10-14T09:00:00Z", "de": "en_espera", "a": "captado", "usuario": "jose" }]
   },

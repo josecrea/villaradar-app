@@ -1,8 +1,9 @@
 import type { Ficha, Contacto } from "../api/tipos";
 import { contacto as pideContacto, cambiaEstado, asigna } from "../api/cliente";
-import { ETAPAS, pintaEtapaChip, etiquetaEtapa } from "./embudo";
+import { pintaEtapaChip } from "./embudo";
+import { DISPOSICIONES, necesitaRecordatorio, type Disposicion } from "./disposiciones";
 
-function sparkline(puntos: Array<{ fecha: string; precio: number }>): SVGElement {
+function sparkline(puntosDesc: Array<{ fecha: string; precio: number }>): SVGElement {
   const ns = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(ns, "svg");
   svg.setAttribute("viewBox", "0 0 200 50");
@@ -10,6 +11,9 @@ function sparkline(puntos: Array<{ fecha: string; precio: number }>): SVGElement
   svg.setAttribute("height", "50");
   svg.setAttribute("role", "img");
   svg.setAttribute("aria-label", "Histórico de precio");
+  // La API devuelve el histórico en orden DESC (más reciente primero);
+  // la sparkline se dibuja en orden cronológico ascendente.
+  const puntos = [...puntosDesc].sort((a, b) => a.fecha.localeCompare(b.fecha));
   if (puntos.length < 2) return svg;
   const precios = puntos.map((p) => p.precio);
   const min = Math.min(...precios);
@@ -77,13 +81,19 @@ export function pintaFicha(contenedor: HTMLElement, ficha: Ficha, onVolver: () =
   scoreSeccion.appendChild(razonesLista);
   articulo.appendChild(scoreSeccion);
 
-  if (ficha.margen2x1 && ficha.margen2x1.length > 0) {
+  if (ficha.margen2x1) {
     const bloque2x1 = document.createElement("section");
     const h2 = document.createElement("h2");
     h2.textContent = "Margen 2x1";
     bloque2x1.appendChild(h2);
+    if (ficha.margen2x1.marginPct !== null) {
+      const margen = document.createElement("p");
+      margen.className = "tabular-nums";
+      margen.textContent = `Margen estimado: ${ficha.margen2x1.marginPct}%`;
+      bloque2x1.appendChild(margen);
+    }
     const lista = document.createElement("ul");
-    for (const razon of ficha.margen2x1) {
+    for (const razon of ficha.margen2x1.razones) {
       const li = document.createElement("li");
       li.textContent = razon;
       lista.appendChild(li);
@@ -153,38 +163,72 @@ function pintaBloqueEstado(ficha: Ficha): HTMLElement {
   const h2 = document.createElement("h2");
   h2.textContent = "Estado del embudo";
   seccion.appendChild(h2);
-  seccion.appendChild(pintaEtapaChip(ficha.etapa));
 
-  const selector = document.createElement("select");
-  selector.setAttribute("aria-label", "Cambiar etapa");
-  for (const etapa of ETAPAS) {
+  // La etapa es DERIVADA por la API a partir de la disposición (ver embudo.ts
+  // del backend); aquí se muestra, no se elige directamente.
+  const etapaActual = document.createElement("p");
+  etapaActual.append("Etapa actual: ");
+  etapaActual.appendChild(pintaEtapaChip(ficha.etapa));
+  seccion.appendChild(etapaActual);
+
+  const selectorDisposicion = document.createElement("select");
+  selectorDisposicion.id = `disposicion-${ficha.id}`;
+  selectorDisposicion.setAttribute("aria-label", "Marcar disposición tras la llamada");
+  for (const meta of DISPOSICIONES) {
     const opcion = document.createElement("option");
-    opcion.value = etapa;
-    opcion.textContent = etiquetaEtapa(etapa);
-    opcion.selected = etapa === ficha.etapa;
-    selector.appendChild(opcion);
+    opcion.value = meta.valor;
+    opcion.textContent = meta.etiqueta;
+    opcion.selected = meta.valor === (ficha.disposicion ?? "pendiente");
+    selectorDisposicion.appendChild(opcion);
   }
+
+  const campoRecordatorio = document.createElement("input");
+  campoRecordatorio.type = "date";
+  campoRecordatorio.setAttribute("aria-label", "Fecha de recordatorio");
+  campoRecordatorio.hidden = !necesitaRecordatorio((ficha.disposicion as Disposicion) ?? "pendiente");
+
+  selectorDisposicion.addEventListener("change", () => {
+    campoRecordatorio.hidden = !necesitaRecordatorio(selectorDisposicion.value as Disposicion);
+  });
 
   const nota = document.createElement("textarea");
   nota.setAttribute("aria-label", "Nota");
   nota.placeholder = "Nota (opcional)";
 
+  const error = document.createElement("p");
+  error.className = "estado-error";
+  error.setAttribute("role", "alert");
+  error.hidden = true;
+
   const guardar = document.createElement("button");
   guardar.type = "button";
-  guardar.textContent = "Guardar estado";
+  guardar.textContent = "Guardar disposición";
   guardar.addEventListener("click", () => {
+    error.hidden = true;
+    const disposicion = selectorDisposicion.value as Disposicion;
+    if (necesitaRecordatorio(disposicion) && !campoRecordatorio.value) {
+      error.textContent = "Esta disposición necesita una fecha de recordatorio.";
+      error.hidden = false;
+      return;
+    }
+    const recordatorioAt = campoRecordatorio.value
+      ? new Date(campoRecordatorio.value).toISOString()
+      : undefined;
     guardar.disabled = true;
-    cambiaEstado(ficha.id, selector.value, nota.value || undefined)
+    cambiaEstado(ficha.id, disposicion, nota.value || undefined, recordatorioAt)
       .catch(() => {
-        /* el error se refleja en un futuro aviso visual; sin bloquear la UI */
+        error.textContent = "No se pudo guardar la disposición.";
+        error.hidden = false;
       })
       .finally(() => {
         guardar.disabled = false;
       });
   });
 
-  seccion.appendChild(selector);
+  seccion.appendChild(selectorDisposicion);
+  seccion.appendChild(campoRecordatorio);
   seccion.appendChild(nota);
+  seccion.appendChild(error);
   seccion.appendChild(guardar);
   return seccion;
 }

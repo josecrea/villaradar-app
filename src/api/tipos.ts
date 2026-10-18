@@ -23,7 +23,7 @@ export interface Item {
   score: number;
   razonesTop3: string[];
   etapa: Etapa;
-  disposicion: string;
+  disposicion: string | null;
   asignadoA: Asignado;
   recordatorioAt: string | null;
   intentos: number;
@@ -52,10 +52,16 @@ export interface Evento {
   a?: string;
 }
 
+export interface Margen2x1 {
+  verdict: string | null;
+  marginPct: number | null;
+  razones: string[];
+}
+
 export interface Ficha extends Item {
   descripcion: string;
   scoreReasons: string[];
-  margen2x1: string[] | null;
+  margen2x1: Margen2x1 | null;
   historicoPrecios: HistoricoPunto[];
   eventos: Evento[];
 }
@@ -69,7 +75,11 @@ export interface Contacto {
 }
 
 export interface Facetas {
-  [clave: string]: Array<{ valor: string; total: number }>;
+  zonas: string[];
+  tipos: string[];
+  portales: string[];
+  anunciantes: string[];
+  porEtapa: Record<string, number>;
 }
 
 export interface LoginRespuesta {

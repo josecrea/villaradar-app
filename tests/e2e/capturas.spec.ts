@@ -35,10 +35,36 @@ test("teclado: ordenar y abrir ficha sin ratón", async ({ page }) => {
   await expect(primeraCabecera).toBeFocused();
   await page.keyboard.press("Enter");
 
-  const primeraFila = page.locator(".fila-item").first();
-  await primeraFila.focus();
+  const primerBotonFila = page.locator(".boton-fila").first();
+  await primerBotonFila.focus();
   await page.keyboard.press("Enter");
   await expect(page.locator(".ficha h1")).toBeVisible();
+});
+
+test("aplicar un filtro cambia la URL y el total", async ({ page }) => {
+  await entraYLogin(page);
+  const totalInicial = await page.locator(".total-resultados").textContent();
+  await page.locator('select[name="etapa"]').selectOption("captado");
+  await page.getByRole("button", { name: "Aplicar filtros" }).click();
+  await expect(page).toHaveURL(/etapa=captado/);
+  await expect(page.locator(".total-resultados")).toHaveText("1 resultado");
+  expect(await page.locator(".total-resultados").textContent()).not.toBe(totalInicial);
+});
+
+test("disposición inválida da 400 (el mock valida como la API real)", async ({ page }) => {
+  await entraYLogin(page);
+  await page.locator(".boton-fila").first().click();
+  await expect(page.locator(".ficha h1")).toBeVisible();
+  const estado = await page.evaluate(async () => {
+    const token = sessionStorage.getItem("vr.token");
+    const resp = await fetch("/api/v1/inmueble/adeje-001/estado", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ disposicion: "etapa-invalida" }),
+    });
+    return resp.status;
+  });
+  expect(estado).toBe(400);
 });
 
 test("estado en la URL persiste tras recargar", async ({ page }) => {

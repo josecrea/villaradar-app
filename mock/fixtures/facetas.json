@@ -1,21 +1,13 @@
 {
-  "portal": [
-    { "valor": "idealista", "total": 3 },
-    { "valor": "fotocasa", "total": 1 },
-    { "valor": "pisos", "total": 1 }
-  ],
-  "municipio": [
-    { "valor": "Adeje", "total": 1 },
-    { "valor": "Arona", "total": 1 },
-    { "valor": "Guía de Isora", "total": 1 },
-    { "valor": "Santiago del Teide", "total": 1 },
-    { "valor": "Granadilla de Abona", "total": 1 }
-  ],
-  "etapa": [
-    { "valor": "novedad", "total": 1 },
-    { "valor": "contactado", "total": 1 },
-    { "valor": "en_espera", "total": 1 },
-    { "valor": "captado", "total": 1 },
-    { "valor": "rechazado", "total": 1 }
-  ]
+  "zonas": ["Adeje", "Arona", "Guía de Isora", "Santiago del Teide", "Granadilla de Abona"],
+  "tipos": ["chalet", "atico", "villa", "casa", "piso"],
+  "portales": ["idealista", "fotocasa", "pisos"],
+  "anunciantes": ["particular", "agencia"],
+  "porEtapa": {
+    "novedad": 1,
+    "contactado": 1,
+    "en_espera": 1,
+    "captado": 1,
+    "rechazado": 1
+  }
 }

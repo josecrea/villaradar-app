@@ -15,9 +15,13 @@
     "municipio": "Adeje",
     "anunciante": "particular",
     "score": 82,
-    "razonesTop3": ["bajada de precio reciente", "zona alta demanda", "anunciante particular"],
+    "razonesTop3": [
+      "bajada de precio reciente",
+      "zona alta demanda",
+      "anunciante particular"
+    ],
     "etapa": "novedad",
-    "disposicion": "pendiente",
+    "disposicion": null,
     "asignadoA": null,
     "recordatorioAt": null,
     "intentos": 0,
@@ -41,7 +45,10 @@
     "municipio": "Arona",
     "anunciante": "agencia",
     "score": 64,
-    "razonesTop3": ["reformado", "cerca de la playa"],
+    "razonesTop3": [
+      "reformado",
+      "cerca de la playa"
+    ],
     "etapa": "contactado",
     "disposicion": "no_contesta",
     "asignadoA": "jose",
@@ -67,7 +74,11 @@
     "municipio": "Guía de Isora",
     "anunciante": "particular",
     "score": 91,
-    "razonesTop3": ["precio estable", "superficie grande", "piscina privada"],
+    "razonesTop3": [
+      "precio estable",
+      "superficie grande",
+      "piscina privada"
+    ],
     "etapa": "en_espera",
     "disposicion": "interesado",
     "asignadoA": "valeria",
@@ -93,7 +104,10 @@
     "municipio": "Santiago del Teide",
     "anunciante": "particular",
     "score": 58,
-    "razonesTop3": ["bajada de precio", "parcela amplia"],
+    "razonesTop3": [
+      "bajada de precio",
+      "parcela amplia"
+    ],
     "etapa": "captado",
     "disposicion": "cita",
     "asignadoA": "jose",
@@ -119,7 +133,10 @@
     "municipio": "Granadilla de Abona",
     "anunciante": "agencia",
     "score": 40,
-    "razonesTop3": ["anunciante agencia", "zona media demanda"],
+    "razonesTop3": [
+      "anunciante agencia",
+      "zona media demanda"
+    ],
     "etapa": "rechazado",
     "disposicion": "no_interesado",
     "asignadoA": null,

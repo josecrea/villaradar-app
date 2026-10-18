@@ -18,8 +18,8 @@ VITE_API_MOCK=1 npm run dev
 - `npm run dev` — servidor de desarrollo.
 - `npm run mock` — servidor mock de la API v1 sobre fixtures sintéticas.
 - `npm run check:size` — presupuesto de JS gzip (< 80 kB).
-- `npm run check:fugas` — escaneo de fugas (teléfonos reales, secretos,
-  «dividir/divisib»); el script lo aporta la OT de devops.
+- `npm run check:fugas` — escaneo de fugas (teléfonos reales, secretos, la
+  palabra prohibida del criterio 2x1); el script lo aporta la OT de devops.
 - `npm run test:e2e` — Playwright (capturas 320/768/1440, accesibilidad,
   teclado, persistencia de estado en la URL).
 
