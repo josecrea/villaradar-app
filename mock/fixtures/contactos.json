@@ -1,0 +1,30 @@
+{
+  "adeje-001": {
+    "telefono": "+34 900 000 000",
+    "waMe": "https://wa.me/34900000000?text=Hola%2C%20le%20escribo%20por%20su%20anuncio",
+    "tel": "tel:+34900000000",
+    "origen": "anuncio",
+    "confianza": "alta"
+  },
+  "arona-014": {
+    "telefono": "+34 900 000 001",
+    "waMe": "https://wa.me/34900000001?text=Hola%2C%20le%20escribo%20por%20su%20anuncio",
+    "tel": "tel:+34900000001",
+    "origen": "anuncio",
+    "confianza": "media"
+  },
+  "santiago-del-teide-003": {
+    "telefono": "+34 900 000 003",
+    "waMe": "https://wa.me/34900000003?text=Hola%2C%20le%20escribo%20por%20su%20anuncio",
+    "tel": "tel:+34900000003",
+    "origen": "anuncio",
+    "confianza": "alta"
+  },
+  "granadilla-022": {
+    "telefono": "+34 900 000 004",
+    "waMe": "https://wa.me/34900000004?text=Hola%2C%20le%20escribo%20por%20su%20anuncio",
+    "tel": "tel:+34900000004",
+    "origen": "anuncio",
+    "confianza": "baja"
+  }
+}
