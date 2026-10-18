@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches-ignore: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instala dependencias
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Tamaño del bundle
+        run: npm run check:size
+
+      - name: Fugas (teléfonos, secretos, dividir, ficheros prohibidos)
+        run: npm run check:fugas
+
+      - name: Instala Chromium para Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E
+        run: npm run test:e2e
+
+      - name: Sin ficheros .db/.env/.sqlite/.csv en el repo
+        run: |
+          if git ls-files | grep -E '\.(db|env|sqlite|csv)$'; then
+            echo "::error::Ficheros prohibidos encontrados en el árbol de git"
+            exit 1
+          fi
+          echo "OK: sin ficheros prohibidos"
