@@ -28,6 +28,7 @@ while IFS= read -r f; do
   [ -f "$f" ] || continue
   case "$f" in
     *"$0") continue ;;
+    .github/*) continue ;;
   esac
 
   if echo "$f" | grep -qE "$RE_EXT"; then
