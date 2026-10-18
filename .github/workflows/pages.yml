@@ -18,6 +18,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Exige CI en verde para este commit antes de publicar
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sha="${{ github.sha }}"
+          conclusion=$(gh run list --workflow=ci.yml --commit "$sha" --limit 1 --json conclusion -q '.[0].conclusion // "ninguno"')
+          echo "Conclusión de CI para $sha: $conclusion"
+          if [ "$conclusion" != "success" ]; then
+            echo "::error::CI no está en verde para $sha (conclusión: $conclusion). No se publica."
+            exit 1
+          fi
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
