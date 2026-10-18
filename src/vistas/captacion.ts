@@ -1,8 +1,8 @@
-import { novedades, inmueble, descargaCsv } from "../api/cliente";
+import { novedades, inmueble, descargaCsv, facetas } from "../api/cliente";
 import { pintaTabla } from "./tabla";
 import { pintaFicha } from "./ficha";
+import { pintaBarraFiltros } from "./filtros";
 import { leeHash, escribeHash } from "./estadoUrl";
-import type { Filtros } from "../api/tipos";
 
 export async function pintaCaptacion(contenedor: HTMLElement): Promise<void> {
   const { ruta, filtros } = leeHash();
@@ -19,10 +19,24 @@ export async function pintaCaptacion(contenedor: HTMLElement): Promise<void> {
     return;
   }
 
+  contenedor.replaceChildren();
+  const zonaFiltros = document.createElement("div");
+  zonaFiltros.id = "zona-filtros";
+  const zonaTabla = document.createElement("div");
+  zonaTabla.id = "zona-tabla";
+  contenedor.appendChild(zonaFiltros);
+  contenedor.appendChild(zonaTabla);
+
   try {
-    const resultado = await novedades(filtros);
-    pintaTabla(contenedor, {
+    const [resultadoFacetas, resultado] = await Promise.all([facetas(), novedades(filtros)]);
+    pintaBarraFiltros(zonaFiltros, {
+      facetas: resultadoFacetas,
+      filtros,
+      onAplicar: (nuevosFiltros) => escribeHash("/captacion", nuevosFiltros),
+    });
+    pintaTabla(zonaTabla, {
       items: resultado.items,
+      total: resultado.total,
       filtros,
       onOrdenar: (clave) => {
         const ordenActual = filtros.orden;
@@ -36,13 +50,4 @@ export async function pintaCaptacion(contenedor: HTMLElement): Promise<void> {
   } catch {
     contenedor.textContent = "No se pudo cargar la captación.";
   }
-}
-
-export function filtrosDesdeFormulario(formulario: HTMLFormElement): Filtros {
-  const datos = new FormData(formulario);
-  const filtros: Filtros = {};
-  for (const [clave, valor] of datos.entries()) {
-    if (typeof valor === "string" && valor) (filtros as Record<string, string>)[clave] = valor;
-  }
-  return filtros;
 }

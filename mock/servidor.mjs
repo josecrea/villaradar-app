@@ -26,6 +26,20 @@ function envia(res, status, cuerpo) {
 
 const TOKEN_MOCK = "v1.jose.9999999999.1.mock";
 
+// Mismas disposiciones que la cola real (villaradar/src/domain/callQueue.ts):
+// validar igual que la API evita que el e2e quede en verde falso.
+const DISPOSICIONES_VALIDAS = [
+  "pendiente",
+  "no_contesta",
+  "buzon",
+  "rellamar",
+  "erroneo",
+  "no_interesado",
+  "no_llamar",
+  "interesado",
+  "cita",
+];
+
 async function manejador(req, res) {
   const url = new URL(req.url, `http://localhost:${PUERTO}`);
   const ruta = url.pathname.replace(/^\/api\/v1/, "");
@@ -57,10 +71,36 @@ async function manejador(req, res) {
     let filtrados = items;
     const etapa = url.searchParams.get("etapa");
     if (etapa) filtrados = filtrados.filter((i) => i.etapa === etapa);
-    const municipio = url.searchParams.get("zona");
-    if (municipio) filtrados = filtrados.filter((i) => i.municipio.toLowerCase().includes(municipio.toLowerCase()));
-    const precioMin = url.searchParams.get("precioMin") ?? url.searchParams.get("min");
+    const zona = url.searchParams.get("zona");
+    if (zona) filtrados = filtrados.filter((i) => i.municipio.toLowerCase().includes(zona.toLowerCase()));
+    const portal = url.searchParams.get("portal");
+    if (portal) filtrados = filtrados.filter((i) => i.portal === portal);
+    const tipo = url.searchParams.get("tipo");
+    if (tipo) filtrados = filtrados.filter((i) => i.tipo === tipo);
+    const operacion = url.searchParams.get("operacion");
+    if (operacion) filtrados = filtrados.filter((i) => i.operacion === operacion);
+    const anunciante = url.searchParams.get("anunciante");
+    if (anunciante) filtrados = filtrados.filter((i) => i.anunciante === anunciante);
+    const tel = url.searchParams.get("tel");
+    if (tel === "1") filtrados = filtrados.filter((i) => i.tieneTelefono);
+    const precioMin = url.searchParams.get("precioMin");
     if (precioMin) filtrados = filtrados.filter((i) => i.precio >= Number(precioMin));
+    const precioMax = url.searchParams.get("precioMax");
+    if (precioMax) filtrados = filtrados.filter((i) => i.precio <= Number(precioMax));
+    const m2min = url.searchParams.get("m2min");
+    if (m2min) filtrados = filtrados.filter((i) => (i.m2 ?? 0) >= Number(m2min));
+    const scoreMin = url.searchParams.get("min");
+    if (scoreMin) filtrados = filtrados.filter((i) => i.score >= Number(scoreMin));
+    const orden = url.searchParams.get("orden");
+    if (orden) {
+      const desc = orden.startsWith("-");
+      const clave = desc ? orden.slice(1) : orden;
+      filtrados = [...filtrados].sort((a, b) => {
+        const av = a[clave] ?? 0;
+        const bv = b[clave] ?? 0;
+        return desc ? (av < bv ? 1 : -1) : av > bv ? 1 : -1;
+      });
+    }
     return envia(res, 200, { total: filtrados.length, cursor: null, items: filtrados });
   }
 
@@ -84,7 +124,13 @@ async function manejador(req, res) {
 
   const matchEstado = ruta.match(/^\/inmueble\/([^/]+)\/estado$/);
   if (matchEstado && req.method === "POST") {
-    await leeJson(req);
+    const cuerpo = await leeJson(req);
+    const valida = new Set(DISPOSICIONES_VALIDAS);
+    const NECESITAN_RECORDATORIO = new Set(["no_contesta", "buzon", "rellamar"]);
+    if (!valida.has(cuerpo.disposicion)) return envia(res, 400, { error: "disposición inválida" });
+    if (NECESITAN_RECORDATORIO.has(cuerpo.disposicion) && !cuerpo.recordatorioAt) {
+      return envia(res, 400, { error: "recordatorioAt requerido" });
+    }
     return envia(res, 204, undefined);
   }
 

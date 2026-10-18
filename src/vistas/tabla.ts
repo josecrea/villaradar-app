@@ -4,6 +4,7 @@ import { COLUMNAS_DISPONIBLES, columnasVisibles, guardaColumnasVisibles } from "
 
 export interface OpcionesTabla {
   items: Item[];
+  total: number;
   filtros: Filtros;
   onOrdenar: (clave: string) => void;
   onFiltrar: (filtros: Filtros) => void;
@@ -114,6 +115,11 @@ export function pintaTabla(contenedor: HTMLElement, opciones: OpcionesTabla): vo
   }
   barra.appendChild(chips);
 
+  const total = document.createElement("span");
+  total.className = "total-resultados tabular-nums";
+  total.textContent = `${opciones.total} resultado${opciones.total === 1 ? "" : "s"}`;
+  barra.appendChild(total);
+
   const botonColumnas = document.createElement("button");
   botonColumnas.type = "button";
   botonColumnas.className = "boton-secundario";
@@ -140,18 +146,18 @@ export function pintaTabla(contenedor: HTMLElement, opciones: OpcionesTabla): vo
   const tbody = document.createElement("tbody");
   for (const item of opciones.items) {
     const tr = document.createElement("tr");
-    tr.tabIndex = 0;
     tr.className = "fila-item";
-    tr.setAttribute("role", "button");
-    for (const clave of columnas) tr.appendChild(valorColumna(item, clave));
-    const activa = () => opciones.onAbrirFicha(item.id);
-    tr.addEventListener("click", activa);
-    tr.addEventListener("keydown", (ev) => {
-      if (ev.key === "Enter" || ev.key === " ") {
-        ev.preventDefault();
-        activa();
-      }
-    });
+    const [primeraClave, ...resto] = columnas;
+    const celdaPrimera = valorColumna(item, primeraClave);
+    const botonAbrir = document.createElement("button");
+    botonAbrir.type = "button";
+    botonAbrir.className = "boton-fila";
+    botonAbrir.textContent = celdaPrimera.textContent ?? item.titulo;
+    botonAbrir.setAttribute("aria-label", `Abrir ficha de ${item.titulo}`);
+    botonAbrir.addEventListener("click", () => opciones.onAbrirFicha(item.id));
+    celdaPrimera.replaceChildren(botonAbrir);
+    tr.appendChild(celdaPrimera);
+    for (const clave of resto) tr.appendChild(valorColumna(item, clave));
     tbody.appendChild(tr);
   }
   tabla.appendChild(tbody);
