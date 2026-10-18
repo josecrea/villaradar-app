@@ -1,0 +1,396 @@
+:root {
+  --bg: oklch(97% 0.008 250);
+  --surf: oklch(100% 0 0);
+  --surf2: oklch(94% 0.012 250);
+  --txt: oklch(24% 0.02 250);
+  --mut: oklch(52% 0.02 250);
+  --g: oklch(56% 0.16 150);
+  --amber: oklch(60% 0.15 70);
+  --red: oklch(56% 0.21 25);
+  --line: oklch(90% 0.012 250);
+
+  --espacio-1: 4px;
+  --espacio-2: 8px;
+  --espacio-3: 14px;
+  --espacio-4: 20px;
+  --espacio-5: 32px;
+
+  --fuente-titular: "Helvetica Neue", Arial, ui-sans-serif, system-ui, sans-serif;
+  --fuente-texto: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --radio: 4px;
+  --duracion-rapida: 120ms;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--txt);
+  font: 15px/1.5 var(--fuente-texto);
+}
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: var(--txt);
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--g);
+  outline-offset: 2px;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Login --- */
+.login-pantalla {
+  max-width: 360px;
+  margin: 15vh auto;
+  padding: var(--espacio-5);
+  background: var(--surf);
+  border: 1px solid var(--line);
+  border-radius: var(--radio);
+}
+.login-pantalla h1 {
+  font-family: var(--fuente-titular);
+  font-size: 22px;
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--espacio-4);
+}
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-3);
+}
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-1);
+}
+.campo label {
+  font-size: 12px;
+  color: var(--mut);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.campo input {
+  padding: var(--espacio-2) var(--espacio-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radio);
+  background: var(--surf);
+  color: var(--txt);
+  font-size: 15px;
+}
+.login-form button[type="submit"] {
+  background: var(--txt);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radio);
+  padding: var(--espacio-2) var(--espacio-3);
+  font-weight: 600;
+}
+.login-error {
+  color: var(--red);
+  font-size: 13px;
+  margin: 0;
+}
+
+/* --- Cabecera / menú --- */
+.cabecera-app {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-4);
+  padding: var(--espacio-3) var(--espacio-4);
+  border-bottom: 1px solid var(--line);
+  background: var(--surf);
+}
+.cabecera-app strong {
+  font-family: var(--fuente-titular);
+  letter-spacing: -0.01em;
+  font-size: 18px;
+}
+.menu-lista {
+  display: flex;
+  gap: var(--espacio-3);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+}
+.menu-lista a {
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mut);
+  padding: var(--espacio-1) var(--espacio-2);
+  border-radius: var(--radio);
+}
+.menu-lista a.activo {
+  color: var(--txt);
+  background: var(--surf2);
+}
+.info-sesion {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  font-size: 13px;
+  color: var(--mut);
+  margin-left: auto;
+}
+
+.boton-secundario {
+  background: var(--surf2);
+  border: 1px solid var(--line);
+  border-radius: var(--radio);
+  padding: var(--espacio-1) var(--espacio-2);
+  font-size: 12px;
+  color: var(--txt);
+}
+
+/* --- Tabla densa --- */
+#contenido-principal {
+  padding: var(--espacio-4);
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+}
+.barra-tabla {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  margin-bottom: var(--espacio-3);
+}
+.chips-filtro {
+  display: flex;
+  gap: var(--espacio-1);
+  flex: 1;
+  flex-wrap: wrap;
+}
+.chip-filtro {
+  background: var(--surf2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 12px;
+}
+.tabla-densa {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: var(--surf);
+}
+.tabla-densa th {
+  text-align: left;
+  border-bottom: 2px solid var(--txt);
+  padding: var(--espacio-2) var(--espacio-2);
+}
+.tabla-densa th button {
+  background: none;
+  border: none;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--txt);
+  padding: 0;
+}
+.tabla-densa td {
+  padding: var(--espacio-2);
+  border-bottom: 1px solid var(--line);
+}
+.fila-item {
+  transition: background var(--duracion-rapida);
+}
+.fila-item:hover,
+.fila-item:focus-visible {
+  background: var(--surf2);
+}
+.col-precio strong {
+  font-size: 15px;
+}
+.precio-m2 {
+  color: var(--mut);
+  font-size: 11px;
+}
+.badge-bajada {
+  display: inline-block;
+  margin-left: var(--espacio-1);
+  background: oklch(92% 0.1 25);
+  color: oklch(38% 0.19 25);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+.tabla-vacia {
+  color: var(--mut);
+  padding: var(--espacio-4) 0;
+}
+.total-resultados {
+  color: var(--mut);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.boton-fila {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--txt);
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--duracion-rapida);
+}
+.boton-fila:hover,
+.boton-fila:focus-visible {
+  text-decoration-color: var(--g);
+}
+.fila-item:hover {
+  background: var(--surf2);
+}
+
+/* --- Barra de filtros --- */
+.barra-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--espacio-3);
+  background: var(--surf);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--txt);
+  border-radius: var(--radio);
+  padding: var(--espacio-3) var(--espacio-4);
+  margin-bottom: var(--espacio-3);
+}
+.campo-filtro {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--mut);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.campo-filtro select,
+.campo-filtro input {
+  font-size: 13px;
+  padding: 4px 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radio);
+  background: var(--surf);
+  color: var(--txt);
+  text-transform: none;
+}
+.barra-filtros button[type="submit"] {
+  background: var(--txt);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radio);
+  padding: 6px 14px;
+  font-weight: 700;
+  font-size: 12px;
+  align-self: center;
+}
+
+.chip-etapa {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.etapa-novedad {
+  background: oklch(92% 0.05 230);
+  color: oklch(35% 0.11 230);
+}
+.etapa-contactado {
+  background: oklch(94% 0.08 70);
+  color: oklch(36% 0.13 70);
+}
+.etapa-en-espera {
+  background: oklch(94% 0.03 250);
+  color: oklch(38% 0.03 250);
+}
+.etapa-captado {
+  background: oklch(92% 0.1 150);
+  color: oklch(32% 0.13 150);
+}
+.etapa-rechazado {
+  background: oklch(92% 0.1 25);
+  color: oklch(38% 0.19 25);
+}
+
+/* --- Ficha --- */
+.ficha {
+  background: var(--surf);
+  border: 1px solid var(--line);
+  border-radius: var(--radio);
+  padding: var(--espacio-5);
+  max-width: 720px;
+}
+.ficha h1 {
+  font-family: var(--fuente-titular);
+  font-size: 26px;
+  margin: 0 0 var(--espacio-1);
+}
+.ficha-meta {
+  color: var(--mut);
+  margin: 0 0 var(--espacio-3);
+}
+.ficha-precio {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 var(--espacio-3);
+}
+.ficha section {
+  margin: var(--espacio-4) 0;
+}
+.ficha section h2 {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mut);
+  margin: 0 0 var(--espacio-2);
+}
+
+dialog.dialogo-columnas {
+  border: 1px solid var(--line);
+  border-radius: var(--radio);
+  padding: var(--espacio-4);
+}
+dialog.dialogo-columnas form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+}
