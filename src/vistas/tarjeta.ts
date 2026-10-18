@@ -92,10 +92,27 @@ export function pintaTarjetaKanban(
   const titulo = document.createElement("span");
   titulo.className = "titulo-kanban";
   titulo.textContent = item.titulo;
+  const meta = document.createElement("span");
+  meta.className = "meta-kanban";
+  meta.textContent = item.m2 ? `${item.municipio} · ${item.m2} m²` : item.municipio;
   const precio = document.createElement("span");
   precio.className = "precio-kanban tabular-nums";
-  precio.textContent = `${FORMATEADOR_EUR.format(item.precio)} €`;
+  const precioValor = document.createElement("span");
+  precioValor.textContent = `${FORMATEADOR_EUR.format(item.precio)} €`;
+  precio.appendChild(precioValor);
+  if (item.variacionPct !== null && item.variacionPct < 0) {
+    const badge = document.createElement("span");
+    badge.className = "badge-bajada";
+    badge.textContent = `↓ ${Math.round(item.variacionPct * 100)}%`;
+    precio.appendChild(badge);
+  } else if (item.m2) {
+    const porM2 = document.createElement("span");
+    porM2.className = "precio-m2";
+    porM2.textContent = `${Math.round(item.precio / item.m2)} €/m²`;
+    precio.appendChild(porM2);
+  }
   asa.appendChild(titulo);
+  asa.appendChild(meta);
   asa.appendChild(precio);
   asa.addEventListener("click", () => onAbrirFicha(item.id));
   tarjeta.appendChild(asa);
