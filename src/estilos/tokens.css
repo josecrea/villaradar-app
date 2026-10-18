@@ -1,0 +1,35 @@
+/* Tokens de marca VillaRadar — puesto de mando. */
+:root {
+  --salvia: #587a6e;
+  --hueso: #fbfaf7;
+  --tinta: #20242a;
+  --tinta-honda: #0b141a;
+  --wa: #25d366;
+  --radio-pildora: 999px;
+  --radio-input: 10px;
+
+  --bg: var(--hueso);
+  --surf: #ffffff;
+  --surf2: oklch(94% 0.012 250);
+  --txt: var(--tinta);
+  --mut: oklch(52% 0.02 250);
+  --g: var(--salvia);
+  --amber: oklch(60% 0.15 70);
+  --red: oklch(56% 0.21 25);
+  --line: oklch(90% 0.012 250);
+
+  --espacio-1: 4px;
+  --espacio-2: 8px;
+  --espacio-3: 14px;
+  --espacio-4: 20px;
+  --espacio-5: 32px;
+
+  --fuente-titular: "Helvetica Neue", Arial, ui-sans-serif, system-ui, sans-serif;
+  --fuente-texto: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --radio: 4px;
+  --duracion-rapida: 120ms;
+
+  --cifra-min: 48px;
+  --cifra-max: 64px;
+}

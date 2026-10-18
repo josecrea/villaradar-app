@@ -1,4 +1,6 @@
-import "./estilos.css";
+import "./estilos/tokens.css";
+import "./estilos/base.css";
+import "./estilos/componentes.css";
 import { sesionGuardada, pintaFormularioLogin, cerrarSesionLocal } from "./auth/login";
 import { pintaMenu } from "./vistas/menu";
 import { pintaCaptacion } from "./vistas/captacion";
