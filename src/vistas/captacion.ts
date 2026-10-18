@@ -39,7 +39,13 @@ export async function pintaCaptacion(contenedor: HTMLElement): Promise<void> {
         kpis(),
       ]);
 
-      pintaFranjaMando(zonaMando, datosKpis);
+      const abrirFicha = (id: string) => {
+        inmueble(id)
+          .then((ficha) => abrirDrawerFicha(ficha, () => void recarga()))
+          .catch(() => undefined);
+      };
+
+      pintaFranjaMando(zonaMando, { datos: datosKpis, items: resultado.items, onAbrirFicha: abrirFicha });
       pintaBotonMapa(zonaMapa, resultado.items);
 
       pintaBotonAbrirFiltros(zonaHojaFiltros, {
@@ -52,12 +58,6 @@ export async function pintaCaptacion(contenedor: HTMLElement): Promise<void> {
         filtros,
         onAplicar: (nuevosFiltros) => escribeHash("/captacion", nuevosFiltros),
       });
-
-      const abrirFicha = (id: string) => {
-        inmueble(id)
-          .then((ficha) => abrirDrawerFicha(ficha, () => void recarga()))
-          .catch(() => undefined);
-      };
 
       pintaKanban(zonaKanban, {
         items: resultado.items,
