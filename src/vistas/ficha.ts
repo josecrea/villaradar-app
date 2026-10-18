@@ -137,6 +137,7 @@ function pintaBloqueContacto(id: string): HTMLElement {
         enlaceWa.href = contacto.waMe;
         enlaceWa.target = "_blank";
         enlaceWa.rel = "noopener noreferrer";
+        enlaceWa.className = "boton-whatsapp";
         enlaceWa.textContent = "Abrir WhatsApp";
         const enlaceTel = document.createElement("a");
         enlaceTel.href = contacto.tel;
