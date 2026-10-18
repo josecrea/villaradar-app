@@ -2,7 +2,6 @@ name: CI
 
 on:
   push:
-    branches-ignore: [main]
   pull_request:
 
 permissions:
@@ -17,10 +16,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
 
-      - name: Instala dependencias
-        run: npm ci
+      - name: Cache npm (solo si hay package-lock.json)
+        if: hashFiles('package-lock.json') != ''
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Instala dependencias (npm ci si hay lock, si no npm install)
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
       - name: Build
         run: npm run build
