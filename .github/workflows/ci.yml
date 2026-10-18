@@ -34,7 +34,7 @@ jobs:
       - name: Tamaño del bundle
         run: npm run check:size
 
-      - name: Fugas (teléfonos, secretos, dividir, ficheros prohibidos)
+      - name: Fugas (teléfonos, secretos, criterio 2x1, ficheros prohibidos)
         run: npm run check:fugas
 
       - name: Instala Chrome para Playwright (playwright.config.ts usa channel "chrome")
