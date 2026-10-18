@@ -30,6 +30,13 @@ export interface Item {
   tieneTelefono: boolean;
   vistoAt: string | null;
   actualizadoAt: string;
+  lat: number | null;
+  lng: number | null;
+  fotoUrl: string | null;
+  fotosN: number | null;
+  publicadoHace: number | null;
+  crmRef: string | null;
+  crmEstado: string | null;
 }
 
 export interface Novedades {
@@ -107,4 +114,15 @@ export interface Filtros {
   asignado?: string;
   orden?: string;
   cursor?: string;
+}
+
+export interface Kpis {
+  nuevosHoy: number;
+  conTelefono: number;
+  bajadas7d: number;
+  porEtapa: Record<string, number>;
+  recordatoriosHoy: number;
+  crmPendientes: number;
+  crmFallos: number;
+  actualizadoAt: string;
 }

@@ -1,5 +1,5 @@
 import { EFECTIVO_BASE, getToken, clearToken } from "./base";
-import type { Novedades, Ficha, Contacto, Facetas, LoginRespuesta, Filtros } from "./tipos";
+import type { Novedades, Ficha, Contacto, Facetas, LoginRespuesta, Filtros, Kpis } from "./tipos";
 
 export class ErrorApi extends Error {
   constructor(
@@ -80,6 +80,14 @@ export function asigna(id: string, usuario: string | null): Promise<void> {
 
 export function facetas(): Promise<Facetas> {
   return peticion<Facetas>("/facetas");
+}
+
+export function kpis(): Promise<Kpis> {
+  return peticion<Kpis>("/kpis");
+}
+
+export function enviaOdoo(id: string): Promise<{ ok: boolean; estado: string }> {
+  return peticion<{ ok: boolean; estado: string }>(`/inmueble/${encodeURIComponent(id)}/odoo`, { method: "POST" });
 }
 
 export async function descargaCsv(filtros: Filtros): Promise<void> {
