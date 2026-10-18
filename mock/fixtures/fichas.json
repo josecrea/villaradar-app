@@ -1,0 +1,59 @@
+{
+  "adeje-001": {
+    "descripcion": "Chalet de 180 m2 con vistas al mar, piscina privada y jardín. tel. oculto en el anuncio original.",
+    "scoreReasons": ["bajada de precio del 6% en 30 dias", "zona Adeje con alta rotacion", "anunciante particular"],
+    "margen2x1": null,
+    "historicoPrecios": [
+      { "fecha": "2026-10-10", "precio": 425000 },
+      { "fecha": "2026-09-01", "precio": 452000 }
+    ],
+    "eventos": [
+      { "tipo": "novedad", "at": "2026-10-15T09:00:00Z" }
+    ]
+  },
+  "arona-014": {
+    "descripcion": "Atico reformado a estrenar, 2 habitaciones, terraza con vista parcial al mar. tel. oculto.",
+    "scoreReasons": ["reforma reciente", "cercania a la playa"],
+    "margen2x1": null,
+    "historicoPrecios": [{ "fecha": "2026-09-20", "precio": 289000 }],
+    "eventos": [
+      { "tipo": "novedad", "at": "2026-10-14T09:00:00Z" },
+      { "tipo": "contacto_visto", "at": "2026-10-16T11:20:00Z", "usuario": "jose" },
+      { "tipo": "cambio_estado", "at": "2026-10-16T11:25:00Z", "de": "novedad", "a": "contactado", "usuario": "jose" }
+    ]
+  },
+  "guia-isora-007": {
+    "descripcion": "Villa de 240 m2 con piscina privada y parcela de 1000 m2. tel. oculto.",
+    "scoreReasons": ["precio estable", "superficie por encima de la media", "piscina privada"],
+    "margen2x1": {
+      "verdict": "viable",
+      "marginPct": 18.4,
+      "razones": ["tipología apta", "precio dentro de rango", "superficie amplia"]
+    },
+    "historicoPrecios": [
+      { "fecha": "2026-10-01", "precio": 610000 },
+      { "fecha": "2026-08-01", "precio": 610000 }
+    ],
+    "eventos": [
+      { "tipo": "novedad", "at": "2026-10-05T09:00:00Z" },
+      { "tipo": "cambio_estado", "at": "2026-10-17T08:00:00Z", "de": "contactado", "a": "en_espera", "usuario": "valeria" }
+    ]
+  },
+  "santiago-del-teide-003": {
+    "descripcion": "Casa terrera con parcela amplia, posibilidad de ampliacion. tel. oculto.",
+    "scoreReasons": ["bajada de precio", "parcela amplia", "zona tranquila"],
+    "margen2x1": null,
+    "historicoPrecios": [
+      { "fecha": "2026-10-01", "precio": 198000 },
+      { "fecha": "2026-08-15", "precio": 210000 }
+    ],
+    "eventos": [{ "tipo": "cambio_estado", "at": "2026-10-14T09:00:00Z", "de": "en_espera", "a": "captado", "usuario": "jose" }]
+  },
+  "granadilla-022": {
+    "descripcion": "Piso centrico de 70 m2, 2 habitaciones. tel. oculto.",
+    "scoreReasons": ["anunciante agencia", "zona de demanda media"],
+    "margen2x1": null,
+    "historicoPrecios": [{ "fecha": "2026-10-05", "precio": 142000 }],
+    "eventos": [{ "tipo": "cambio_estado", "at": "2026-10-11T09:00:00Z", "de": "contactado", "a": "rechazado", "usuario": "jose" }]
+  }
+}
