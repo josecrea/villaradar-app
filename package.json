@@ -1,0 +1,21 @@
+{
+  "name": "villaradar-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && cp dist/index.html dist/404.html",
+    "mock": "node mock/servidor.mjs",
+    "check:size": "node scripts/check-tamano.mjs",
+    "check:fugas": "bash scripts/check-fugas.sh",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.1",
+    "@playwright/test": "^1.49.1",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.11"
+  }
+}
