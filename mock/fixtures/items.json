@@ -27,7 +27,14 @@
     "intentos": 0,
     "tieneTelefono": true,
     "vistoAt": null,
-    "actualizadoAt": "2026-10-15T09:00:00Z"
+    "actualizadoAt": "2026-10-15T09:00:00Z",
+    "lat": 28.1227,
+    "lng": -16.7262,
+    "fotoUrl": "https://pics.fotocasa.es/adeje-001.jpg",
+    "fotosN": 12,
+    "publicadoHace": 2,
+    "crmRef": null,
+    "crmEstado": null
   },
   {
     "id": "arona-014",
@@ -56,7 +63,14 @@
     "intentos": 2,
     "tieneTelefono": true,
     "vistoAt": "2026-10-16T11:20:00Z",
-    "actualizadoAt": "2026-10-16T11:20:00Z"
+    "actualizadoAt": "2026-10-16T11:20:00Z",
+    "lat": 28.0916,
+    "lng": -16.6808,
+    "fotoUrl": null,
+    "fotosN": 0,
+    "publicadoHace": 5,
+    "crmRef": "42",
+    "crmEstado": "ok"
   },
   {
     "id": "guia-isora-007",
@@ -86,7 +100,14 @@
     "intentos": 3,
     "tieneTelefono": false,
     "vistoAt": "2026-10-17T08:00:00Z",
-    "actualizadoAt": "2026-10-17T08:00:00Z"
+    "actualizadoAt": "2026-10-17T08:00:00Z",
+    "lat": 28.2122,
+    "lng": -16.8364,
+    "fotoUrl": "https://pics.fotocasa.es/guia-isora-007.jpg",
+    "fotosN": 20,
+    "publicadoHace": 1,
+    "crmRef": "57",
+    "crmEstado": "pendiente"
   },
   {
     "id": "santiago-del-teide-003",
@@ -115,7 +136,14 @@
     "intentos": 4,
     "tieneTelefono": true,
     "vistoAt": "2026-10-10T09:00:00Z",
-    "actualizadoAt": "2026-10-14T09:00:00Z"
+    "actualizadoAt": "2026-10-14T09:00:00Z",
+    "lat": null,
+    "lng": null,
+    "fotoUrl": null,
+    "fotosN": null,
+    "publicadoHace": 9,
+    "crmRef": "61",
+    "crmEstado": "ok"
   },
   {
     "id": "granadilla-022",
@@ -144,6 +172,13 @@
     "intentos": 1,
     "tieneTelefono": true,
     "vistoAt": "2026-10-11T09:00:00Z",
-    "actualizadoAt": "2026-10-11T09:00:00Z"
+    "actualizadoAt": "2026-10-11T09:00:00Z",
+    "lat": null,
+    "lng": null,
+    "fotoUrl": null,
+    "fotosN": null,
+    "publicadoHace": 20,
+    "crmRef": null,
+    "crmEstado": "error"
   }
 ]

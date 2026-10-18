@@ -13,6 +13,29 @@ async function cargaFixture(nombre) {
   return JSON.parse(await readFile(ruta, "utf-8"));
 }
 
+// Estado mutable en memoria para que /estado y /asignar se reflejen en
+// /novedades y /kpis durante la sesión del mock (nunca persiste a disco).
+let itemsEnMemoria = null;
+async function itemsVivos() {
+  if (!itemsEnMemoria) itemsEnMemoria = await cargaFixture("items.json");
+  return itemsEnMemoria;
+}
+
+// Misma derivación disposición → etapa que usa kanban.ts en el front
+// (la etapa real la deriva el backend; aquí replicamos para que el mock no
+// quede en verde falso).
+const ETAPA_POR_DISPOSICION = {
+  pendiente: "novedad",
+  no_contesta: "contactado",
+  buzon: "en_espera",
+  rellamar: "contactado",
+  erroneo: "rechazado",
+  no_interesado: "rechazado",
+  no_llamar: "rechazado",
+  interesado: "en_espera",
+  cita: "captado",
+};
+
 function envia(res, status, cuerpo) {
   const json = cuerpo === undefined ? "" : JSON.stringify(cuerpo);
   res.writeHead(status, {
@@ -25,6 +48,11 @@ function envia(res, status, cuerpo) {
 }
 
 const TOKEN_MOCK = "v1.jose.9999999999.1.mock";
+
+// Fecha fija para capturas deterministas (ver tests/e2e).
+const AHORA_FIJA = "2026-10-19T09:00:00Z";
+
+const ORDEN_VALIDOS = new Set(["", "precio", "-precio", "score", "-score"]);
 
 // Mismas disposiciones que la cola real (villaradar/src/domain/callQueue.ts):
 // validar igual que la API evita que el e2e quede en verde falso.
@@ -67,7 +95,7 @@ async function manejador(req, res) {
   if (ruta === "/logout" && req.method === "POST") return envia(res, 204, undefined);
 
   if (ruta === "/novedades") {
-    const items = await cargaFixture("items.json");
+    const items = await itemsVivos();
     let filtrados = items;
     const etapa = url.searchParams.get("etapa");
     if (etapa) filtrados = filtrados.filter((i) => i.etapa === etapa);
@@ -91,7 +119,8 @@ async function manejador(req, res) {
     if (m2min) filtrados = filtrados.filter((i) => (i.m2 ?? 0) >= Number(m2min));
     const scoreMin = url.searchParams.get("min");
     if (scoreMin) filtrados = filtrados.filter((i) => i.score >= Number(scoreMin));
-    const orden = url.searchParams.get("orden");
+    const orden = url.searchParams.get("orden") ?? "";
+    if (!ORDEN_VALIDOS.has(orden)) return envia(res, 400, { error: "orden inválido" });
     if (orden) {
       const desc = orden.startsWith("-");
       const clave = desc ? orden.slice(1) : orden;
@@ -107,7 +136,7 @@ async function manejador(req, res) {
   const matchFicha = ruta.match(/^\/inmueble\/([^/]+)$/);
   if (matchFicha) {
     const id = decodeURIComponent(matchFicha[1]);
-    const items = await cargaFixture("items.json");
+    const items = await itemsVivos();
     const fichas = await cargaFixture("fichas.json");
     const base = items.find((i) => i.id === id);
     if (!base || !fichas[id]) return envia(res, 404, { error: "no encontrado" });
@@ -124,12 +153,20 @@ async function manejador(req, res) {
 
   const matchEstado = ruta.match(/^\/inmueble\/([^/]+)\/estado$/);
   if (matchEstado && req.method === "POST") {
+    const id = decodeURIComponent(matchEstado[1]);
     const cuerpo = await leeJson(req);
     const valida = new Set(DISPOSICIONES_VALIDAS);
     const NECESITAN_RECORDATORIO = new Set(["no_contesta", "buzon", "rellamar"]);
     if (!valida.has(cuerpo.disposicion)) return envia(res, 400, { error: "disposición inválida" });
     if (NECESITAN_RECORDATORIO.has(cuerpo.disposicion) && !cuerpo.recordatorioAt) {
       return envia(res, 400, { error: "recordatorioAt requerido" });
+    }
+    const items = await itemsVivos();
+    const item = items.find((i) => i.id === id);
+    if (item) {
+      item.disposicion = cuerpo.disposicion;
+      item.etapa = ETAPA_POR_DISPOSICION[cuerpo.disposicion] ?? item.etapa;
+      if (cuerpo.recordatorioAt) item.recordatorioAt = cuerpo.recordatorioAt;
     }
     return envia(res, 204, undefined);
   }
@@ -138,6 +175,27 @@ async function manejador(req, res) {
   if (matchAsignar && req.method === "POST") {
     await leeJson(req);
     return envia(res, 204, undefined);
+  }
+
+  if (ruta === "/kpis") {
+    const items = await itemsVivos();
+    const porEtapa = {};
+    for (const i of items) porEtapa[i.etapa] = (porEtapa[i.etapa] ?? 0) + 1;
+    return envia(res, 200, {
+      nuevosHoy: items.filter((i) => i.etapa === "novedad").length,
+      conTelefono: items.filter((i) => i.tieneTelefono).length,
+      bajadas7d: items.filter((i) => i.variacionPct !== null && i.variacionPct < 0).length,
+      porEtapa,
+      recordatoriosHoy: items.filter((i) => i.recordatorioAt).length,
+      crmPendientes: items.filter((i) => i.crmEstado === "pendiente").length,
+      crmFallos: items.filter((i) => i.crmEstado === "error").length,
+      actualizadoAt: AHORA_FIJA,
+    });
+  }
+
+  const matchOdoo = ruta.match(/^\/inmueble\/([^/]+)\/odoo$/);
+  if (matchOdoo && req.method === "POST") {
+    return envia(res, 200, { ok: true, estado: "ok" });
   }
 
   if (ruta === "/facetas") return envia(res, 200, await cargaFixture("facetas.json"));
