@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Cache npm (solo si hay package-lock.json)
+        if: hashFiles('package-lock.json') != ''
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Instala dependencias (npm ci si hay lock, si no npm install)
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Build
+        run: npm run build
+
+      - name: Tamaño del bundle
+        run: npm run check:size
+
+      - name: Fugas (teléfonos, secretos, dividir, ficheros prohibidos)
+        run: npm run check:fugas
+
+      - name: Instala Chrome para Playwright (playwright.config.ts usa channel "chrome")
+        run: npx playwright install --with-deps chrome
+
+      - name: E2E
+        run: npm run test:e2e
+
+      - name: Sin ficheros .db/.env/.sqlite/.csv en el repo
+        run: |
+          if git ls-files | grep -E '\.(db|env|sqlite|csv)$'; then
+            echo "::error::Ficheros prohibidos encontrados en el árbol de git"
+            exit 1
+          fi
+          echo "OK: sin ficheros prohibidos"
