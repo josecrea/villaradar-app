@@ -1,6 +1,7 @@
 import type { Item, Filtros } from "../api/tipos";
 import { pintaEtapaChip } from "./embudo";
 import { COLUMNAS_DISPONIBLES, columnasVisibles, guardaColumnasVisibles } from "./columnas";
+import { pintaTarjetaLista } from "./tarjeta";
 
 export interface OpcionesTabla {
   items: Item[];
@@ -63,6 +64,10 @@ function valorColumna(item: Item, clave: string): HTMLTableCellElement {
   return celdaTexto(String(valor));
 }
 
+// La API solo acepta ordenar por estas claves (ver docs/CONTRATO-V1.json);
+// el resto de columnas se muestran sin botón de orden.
+const CLAVES_ORDENABLES = new Set(["precio", "score"]);
+
 function pintaCabecera(
   thead: HTMLTableSectionElement,
   columnas: string[],
@@ -74,16 +79,17 @@ function pintaCabecera(
     const columna = COLUMNAS_DISPONIBLES.find((c) => c.clave === clave);
     const th = document.createElement("th");
     th.scope = "col";
-    const boton = document.createElement("button");
-    boton.type = "button";
-    boton.textContent = columna?.etiqueta ?? clave;
-    boton.addEventListener("click", () => onOrdenar(clave));
-    th.appendChild(boton);
-    const ordenando = ordenActual === clave || ordenActual === `-${clave}`;
-    if (ordenando) {
-      th.setAttribute("aria-sort", ordenActual?.startsWith("-") ? "descending" : "ascending");
+    const etiqueta = columna?.etiqueta ?? clave;
+    if (CLAVES_ORDENABLES.has(clave)) {
+      const boton = document.createElement("button");
+      boton.type = "button";
+      boton.textContent = etiqueta;
+      boton.addEventListener("click", () => onOrdenar(clave));
+      th.appendChild(boton);
+      const ordenando = ordenActual === clave || ordenActual === `-${clave}`;
+      th.setAttribute("aria-sort", ordenando ? (ordenActual?.startsWith("-") ? "descending" : "ascending") : "none");
     } else {
-      th.setAttribute("aria-sort", "none");
+      th.textContent = etiqueta;
     }
     tr.appendChild(th);
   }
@@ -137,6 +143,8 @@ export function pintaTabla(contenedor: HTMLElement, opciones: OpcionesTabla): vo
   contenedor.appendChild(barra);
 
   const columnas = columnasVisibles();
+  const envoltorioTabla = document.createElement("div");
+  envoltorioTabla.className = "tabla-densa-envoltorio";
   const tabla = document.createElement("table");
   tabla.className = "tabla-densa";
   const thead = document.createElement("thead");
@@ -161,7 +169,15 @@ export function pintaTabla(contenedor: HTMLElement, opciones: OpcionesTabla): vo
     tbody.appendChild(tr);
   }
   tabla.appendChild(tbody);
-  contenedor.appendChild(tabla);
+  envoltorioTabla.appendChild(tabla);
+  contenedor.appendChild(envoltorioTabla);
+
+  const listaTarjetas = document.createElement("div");
+  listaTarjetas.className = "lista-tarjetas";
+  for (const item of opciones.items) {
+    listaTarjetas.appendChild(pintaTarjetaLista(item, opciones.onAbrirFicha));
+  }
+  contenedor.appendChild(listaTarjetas);
 
   if (opciones.items.length === 0) {
     const vacio = document.createElement("p");
