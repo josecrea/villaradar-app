@@ -398,8 +398,11 @@ dialog.hoja-filtros .barra-filtros {
 .kanban-tarjeta .asa-arrastre {
   touch-action: none;
   cursor: grab;
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   width: 100%;
+  min-width: 0;
   min-height: 44px;
   background: none;
   border: none;
@@ -415,10 +418,24 @@ dialog.hoja-filtros .barra-filtros {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-wrap: balance;
+  min-width: 0;
+}
+.kanban-tarjeta .meta-kanban {
+  font-size: 11px;
+  color: var(--mut);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 .kanban-tarjeta .precio-kanban {
   font-size: 14px;
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
 }
 .kanban-tarjeta.arrastrando {
   opacity: 0.5;
@@ -555,14 +572,38 @@ dialog.dialogo-columnas form {
 
 /* ======================= Breakpoints ======================= */
 
-/* ≤480px: una columna, tarjetas, franja de mando compacta */
-@media (max-width: 480px) {
+/* <768px: la franja de mando pasa a rejilla de 3 columnas (2 filas de 6
+   cifras); cada cifra con su propio ancho evita que los rótulos se solapen. */
+@media (max-width: 767px) {
   .franja-mando {
-    gap: var(--espacio-3);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--espacio-3) var(--espacio-2);
+    overflow-x: visible;
+  }
+  .cifra-mando {
+    min-width: 0;
+    overflow: hidden;
   }
   .cifra-mando .valor {
     font-size: var(--cifra-min);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
+  .cifra-mando .etiqueta {
+    white-space: normal;
+    overflow-wrap: break-word;
+    line-height: 1.2;
+  }
+  .aviso-crm {
+    grid-column: 1 / -1;
+    margin-left: 0;
+  }
+}
+
+/* ≤480px: una columna, tarjetas */
+@media (max-width: 480px) {
   .boton-abrir-filtros {
     display: block;
   }
@@ -574,7 +615,7 @@ dialog.dialogo-columnas form {
   }
 }
 
-/* 481-767px: tarjetas también, 2 cifras por fila en franja */
+/* 481-767px: tarjetas también */
 @media (min-width: 481px) and (max-width: 767px) {
   .boton-abrir-filtros {
     display: block;
