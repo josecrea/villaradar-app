@@ -25,16 +25,20 @@ riesgo que mitiga para esta app.
 con teselas OSM públicas al abrir la ficha de un inmueble (`await import("leaflet")`, chunk
 aparte — ver `scripts/check-tamano.mjs`).
 
-## Host de imágenes de Fotocasa — PENDIENTE DE CONFIRMAR
+## Host de imágenes de Fotocasa — CONFIRMADO por OT-2
 
-`img-src` incluye `https://*.fotocasa.es` como placeholder del plan. **OT-2 (captador) debe
-reportar el host REAL** de las imágenes que entrega el campo `fotoUrl` del contrato v1.1
-(dominio exacto, p. ej. `st3.depositphotos.com`, `img.fotocasa.es`, un CDN de terceros, etc.).
+OT-2 reporta: el campo real de la foto en la respuesta de Fotocasa es `multimedia[].src`
+(filtrando `type === 'image'`), y el host verificado de esas imágenes es
+**`static.fotocasa.es`**.
 
-- Si el host real coincide con `*.fotocasa.es` → no hay cambio.
-- Si es distinto → **se añade SOLO aquí** (este fichero), nunca se negocia el resto de la
-  CSP, y se avisa a OT-3 para que actualice `index.html` con el valor corregido.
+El comodín `https://*.fotocasa.es` que ya está en la directiva `img-src` del literal del
+plan **cubre `static.fotocasa.es` sin ningún cambio** — no se toca la CSP. Se deja anotado
+aquí el subdominio concreto verificado por si en el futuro se decide cerrar el comodín a un
+host exacto:
 
-Estado a 19-oct-2026: **a la espera del reporte de OT-2** sobre el host definitivo de
-`fotoUrl`. Hasta que llegue, el placeholder `https://*.fotocasa.es` queda documentado como
-provisional.
+```
+img-src 'self' data: https://*.tile.openstreetmap.org https://static.fotocasa.es;
+```
+
+Mientras no haya esa decisión explícita, la CSP vigente sigue siendo la del literal de
+arriba, con el comodín `*.fotocasa.es`.
