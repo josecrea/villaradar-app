@@ -42,3 +42,23 @@ img-src 'self' data: https://*.tile.openstreetmap.org https://static.fotocasa.es
 
 Mientras no haya esa decisión explícita, la CSP vigente sigue siendo la del literal de
 arriba, con el comodín `*.fotocasa.es`.
+
+## `frame-ancestors` en GitHub Pages — inerte por `<meta>`, riesgo aceptado
+
+`frame-ancestors 'none'` protege contra clickjacking, pero la especificación CSP
+**ignora `frame-ancestors` cuando se entrega por `<meta http-equiv="Content-Security-Policy">`**
+(solo aplica vía cabecera HTTP `Content-Security-Policy`). El navegador lo avisa en
+consola: `'frame-ancestors' is ignored when delivered via a <meta> element`.
+
+GitHub Pages sirve ficheros estáticos sin posibilidad de añadir cabeceras HTTP propias
+— no hay forma de arreglarlo mientras el front viva ahí. Dos salidas, ninguna aplicada
+en esta fase:
+
+1. **Riesgo aceptado** (opción por defecto mientras el front esté en GitHub Pages): la
+   app es de solo lectura/gestión interna detrás de login, el impacto de clickjacking
+   es bajo, y el resto de la CSP (`script-src 'self'`, `object-src 'none'`,
+   `base-uri 'self'`) sigue activo vía `<meta>` sin problema — esas directivas SÍ se
+   aplican fuera de cabecera HTTP.
+2. Servir el front desde el VPS (ver Plan B de `docs/REVERSION.md` en el repo
+   `villaradar`) permite que Traefik o el propio servidor añadan la cabecera HTTP real
+   con `frame-ancestors 'none'` efectivo. Solo se activa si Jose lo pide.
