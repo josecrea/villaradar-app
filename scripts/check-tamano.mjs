@@ -1,5 +1,8 @@
-// Presupuesto de JS: 150 kB gz total; sub-límite del shell (todo menos el
-// chunk de Leaflet, que se separa e informa aparte) <= 60 kB gz.
+// Comprueba el presupuesto de JS del build (gzip).
+// Presupuesto total: 150 kB gz. Sub-límite del shell (todo menos el chunk de Leaflet): 60 kB gz.
+// El chunk de Leaflet (mapa.ts hace `await import("leaflet")`, Vite lo separa en su propio
+// fichero) se reporta aparte y NO cuenta contra el sub-límite del shell, pero SÍ cuenta
+// contra el total de 150 kB.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { gzipSync } from "node:zlib";
 import { join } from "node:path";
@@ -21,35 +24,63 @@ function ficherosJs(dir) {
   return resultado;
 }
 
+function esChunkDeLeaflet(ruta) {
+  return /leaflet/i.test(ruta);
+}
+
 const ficheros = ficherosJs(DIST);
 let totalShell = 0;
 let totalLeaflet = 0;
+const desgloseShell = [];
+const desgloseLeaflet = [];
 
 for (const fichero of ficheros) {
   const contenido = readFileSync(fichero);
   const gz = gzipSync(contenido).length;
-  const esLeaflet = /leaflet/i.test(fichero);
-  if (esLeaflet) {
+  if (esChunkDeLeaflet(fichero)) {
     totalLeaflet += gz;
+    desgloseLeaflet.push({ fichero, gz });
   } else {
     totalShell += gz;
+    desgloseShell.push({ fichero, gz });
   }
-  console.log(`${fichero}: ${(gz / 1024).toFixed(2)} kB gz${esLeaflet ? " (leaflet, aparte)" : ""}`);
 }
 
-const total = totalShell + totalLeaflet;
-console.log(`TOTAL JS gzip: ${(total / 1024).toFixed(2)} kB (límite ${LIMITE_TOTAL / 1024} kB)`);
-console.log(`  shell: ${(totalShell / 1024).toFixed(2)} kB (límite ${LIMITE_SHELL / 1024} kB)`);
-console.log(`  leaflet: ${(totalLeaflet / 1024).toFixed(2)} kB (chunk aparte, bajo demanda)`);
+const totalGeneral = totalShell + totalLeaflet;
+
+console.log("--- Desglose shell (sin Leaflet) ---");
+for (const { fichero, gz } of desgloseShell) {
+  console.log(`${fichero}: ${(gz / 1024).toFixed(2)} kB gz`);
+}
+console.log(`SUBTOTAL shell: ${(totalShell / 1024).toFixed(2)} kB (límite ${LIMITE_SHELL / 1024} kB)`);
+
+console.log("--- Desglose Leaflet (chunk aparte) ---");
+if (desgloseLeaflet.length === 0) {
+  console.log("(sin chunk de Leaflet en este build)");
+}
+for (const { fichero, gz } of desgloseLeaflet) {
+  console.log(`${fichero}: ${(gz / 1024).toFixed(2)} kB gz`);
+}
+console.log(`SUBTOTAL Leaflet: ${(totalLeaflet / 1024).toFixed(2)} kB`);
+
+console.log(`TOTAL JS gzip: ${(totalGeneral / 1024).toFixed(2)} kB (límite ${LIMITE_TOTAL / 1024} kB)`);
 
 let fallo = false;
-if (total > LIMITE_TOTAL) {
-  console.error(`FALLO: presupuesto TOTAL superado (${(total / 1024).toFixed(2)} > ${LIMITE_TOTAL / 1024} kB)`);
+if (totalShell > LIMITE_SHELL) {
+  console.error(
+    `FALLO: shell supera su sub-límite (${(totalShell / 1024).toFixed(2)} kB > ${LIMITE_SHELL / 1024} kB)`,
+  );
   fallo = true;
 }
-if (totalShell > LIMITE_SHELL) {
-  console.error(`FALLO: presupuesto del SHELL superado (${(totalShell / 1024).toFixed(2)} > ${LIMITE_SHELL / 1024} kB)`);
+if (totalGeneral > LIMITE_TOTAL) {
+  console.error(
+    `FALLO: presupuesto total de JS superado (${(totalGeneral / 1024).toFixed(2)} kB > ${LIMITE_TOTAL / 1024} kB)`,
+  );
   fallo = true;
 }
 
-if (fallo) process.exit(1);
+if (fallo) {
+  process.exit(1);
+}
+
+console.log("OK: dentro de presupuesto (150 kB total / 60 kB shell)");
