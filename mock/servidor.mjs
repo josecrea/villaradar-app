@@ -68,21 +68,28 @@ const DISPOSICIONES_VALIDAS = [
   "cita",
 ];
 
-// PNG 1x1 válido (verde-gris suave, cerca de --surf2) reutilizado como tesela
-// y como foto: determinista (nunca depende de red externa), basta para que
-// naturalWidth > 0 en el navegador, y no deja el mapa en negro.
-const PNG_1X1 = Buffer.from(
+// PNG 1x1 (verde-gris suave, cerca de --surf2) para fotos: determinista,
+// basta para que naturalWidth > 0 y no deja las tarjetas en negro.
+const PNG_FOTO = Buffer.from(
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mO48+QuAAU9Ap7JJ9MXAAAAAElFTkSuQmCC",
   "base64",
 );
 
-function enviaPng(res) {
+// Tesela 256x256 con cuadrícula (cada 32px) y borde: no es cartografía real,
+// pero se lee como un mapa en vez de un rectángulo liso (pidió Jose tras ver
+// la captura de 1440). Determinista: mismos bytes siempre.
+const PNG_TESELA = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAIAAADTED8xAAADtElEQVR42u3dwanEIBSGUfsvJJAGhGABaSLZWUhuCW40wj3g254H/nwzWU3KUU/HSXtK/D39nXeuu/H5e/oC4AtAAHwBuCC+AFwQXwAuiC8AF8QXgAviC8AAfAEYgC8AA/AFYAC+AAzAF4AB+AIwAF8ABuALwAB8ARiALwAD8AVgAL4ADMAXgAH4AuDzBcDnC4DPFwCfLwA+XwB8vgD4fAHw+QLg838IIP6H4yQ8vgH4vgEEwBeAC+ILwAXxBeCC+AJwQXwBuCC+AAzAF4AB+AIwAF8ABuALwAB8ARiALwAD8AVgAL4ADMAXgAH4AjAAXwAG4AvAAHwBGIAvAD5fAHy+APh8AfD5AuDzBcDnC4DPFwCfLwA+XwB8/toA/E684/0APiH4HoFcEF8ALogvABfEF4AB+AIwAF8ABuALwAB8ARiALwAD8AVgAL4ADMAXgAH4AjAAXwAG4AvAAHwBGIAvAAPwBWAAvgD4fAHw+QLg8wXA5wuAzxcAny8APl8AfL4A+HwB8PkC4PMFwOd7P4DjeD8An+8RiM8XAJ8vAD5fAHy+APh8AfD5AuDzBcDnC4DPFwCfLwA+XwB8vgD4fAHw+QLg8wXA5wuALwAB8AXggvgCcEF8AbggvgBcEF8ALogvAAPwBWAAvgAMwBeAAfgCMABfAAbgC8AAfO8HcBzvB/AJxPcIZAC+AAzAF4AB+AIwAF8ABuALgM8XAJ8vAD5fAHy+APh8AfD5AuDzBcDnC4DPFwCfLwA+XwB8vgD4fAHw+QLg8wXA5wuAzxcAny8APl8AfL4A+HwB8PkC4PMFwOcLgM8fCcDvxDveD+ATgu8RyAXxBeCC+AJwQXwBGIAvAAPwBWAAvgAMwBeAAfgCMABfAAbgC8AAfAEYgC8AA/AFYAC+AAzAF4AB+AIwAF8ABuALgM8XAJ8vAD5fAHy+APh8AfD5AuDzBcDnC4DPFwCfLwA+XwB8vvcDOI73A/D5HoH4fAHw+QLg8wXA5wuAzxcAny8APl8AfL4A+HwB8PkC4PMFwOcLgM8XAJ8vAD5fAHy+APgCEABfAC6ILwAXxBeAC+ILwAXxBeCC+AIwAF8ABuALwAB8ARiALwAD8AVgAL4ADMD3fgDH8X4An0B8j0AG4AvAAHwBGIAvAAPwBWAAvgD4fAHw+QLg8wXA5wuAzxcAny8APl8AfL4A+HwB8PkC4PMFwOcLgM8XAJ8vAD5fAHy+APh8AfD5AuDzBcDnC4DPFwCfLwA+XwB8/nAAjpP2fCIQipZHU8epAAAAAElFTkSuQmCC",
+  "base64",
+);
+
+function enviaPng(res, buffer) {
   res.writeHead(200, {
     "Content-Type": "image/png",
     "Cache-Control": "no-store",
     "Access-Control-Allow-Origin": "*",
   });
-  res.end(PNG_1X1);
+  res.end(buffer);
 }
 
 async function manejador(req, res) {
@@ -90,8 +97,8 @@ async function manejador(req, res) {
 
   // Teselas y fotos servidas por el propio mock: deterministas, sin depender
   // de red externa (openstreetmap.org / fotocasa.es) durante las capturas e2e.
-  if (/^\/_t\/\d+\/\d+\/\d+\.png$/.test(url.pathname)) return enviaPng(res);
-  if (/^\/_foto\//.test(url.pathname)) return enviaPng(res);
+  if (/^\/_t\/\d+\/\d+\/\d+\.png$/.test(url.pathname)) return enviaPng(res, PNG_TESELA);
+  if (/^\/_foto\//.test(url.pathname)) return enviaPng(res, PNG_FOTO);
 
   const ruta = url.pathname.replace(/^\/api\/v1/, "");
 
