@@ -143,9 +143,41 @@ test("kanban: «Mover a…» solo con teclado mueve la tarjeta", async ({ page }
   await page.keyboard.press("Enter");
   await expect(dialogo).toBeHidden();
 
-  await page.waitForTimeout(200);
-  const siguenEnOrigen = await primeraColumna.locator(".titulo-kanban", { hasText: titulo ?? "" }).count();
-  expect(siguenEnOrigen).toBe(0);
+  // Reintenta hasta que el DOM refleje el movimiento (recarga tras el POST
+  // al mock); nunca un tiempo fijo a ciegas.
+  await expect(primeraColumna.locator(".titulo-kanban", { hasText: titulo ?? "" })).toHaveCount(0);
+});
+
+test("kanban: un arrastre que el servidor rechaza avisa y no mueve la tarjeta", async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== "1440", "el kanban solo se muestra en ≥1200px");
+  await entraYLogin(page);
+
+  // Simula un 400 real del backend (p. ej. Odoo caído o validación fallida)
+  // interceptando SOLO la llamada de este test, sin tocar el mock.
+  await page.route("**/inmueble/*/estado", (route) =>
+    route.fulfill({ status: 400, contentType: "application/json", body: JSON.stringify({ error: "simulado" }) }),
+  );
+
+  // No asume qué columna tiene tarjetas: el mock mantiene estado en memoria
+  // entre tests del mismo proceso, así que un test anterior puede haber
+  // movido la primera columna a 0 elementos.
+  const primeraColumna = page.locator(".kanban-columna:has(.kanban-tarjeta)").first();
+  const tarjeta = primeraColumna.locator(".kanban-tarjeta").first();
+  const titulo = await tarjeta.locator(".titulo-kanban").textContent();
+  const botonMover = tarjeta.locator(".boton-mover-a");
+  await botonMover.focus();
+  await page.keyboard.press("Enter");
+
+  const dialogo = page.locator("dialog.dialogo-mover");
+  await expect(dialogo).toBeVisible();
+  // El destino da igual: el route interceptado rechaza el POST pase lo que pase.
+  const botonDestino = dialogo.locator("button").first();
+  await botonDestino.focus();
+  await page.keyboard.press("Enter");
+
+  // Aviso visible y accesible, y la tarjeta se queda en su columna de origen.
+  await expect(page.locator(".aviso-flotante", { hasText: "No se pudo mover" })).toBeVisible();
+  await expect(primeraColumna.locator(".titulo-kanban", { hasText: titulo ?? "" })).toHaveCount(1);
 });
 
 test("aplicar un filtro cambia la URL y el total", async ({ page }, testInfo) => {
