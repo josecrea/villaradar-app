@@ -5,6 +5,16 @@ const proxyMock = {
     target: "http://localhost:8787",
     changeOrigin: true,
   },
+  // Teselas y fotos deterministas del mock (ver mock/servidor.mjs); mismo
+  // origen que la app, así que la CSP real (img-src 'self' ...) no cambia.
+  "/_t": {
+    target: "http://localhost:8787",
+    changeOrigin: true,
+  },
+  "/_foto": {
+    target: "http://localhost:8787",
+    changeOrigin: true,
+  },
 };
 
 export default defineConfig({

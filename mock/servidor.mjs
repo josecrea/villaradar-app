@@ -68,8 +68,31 @@ const DISPOSICIONES_VALIDAS = [
   "cita",
 ];
 
+// PNG 1x1 válido (verde-gris suave, cerca de --surf2) reutilizado como tesela
+// y como foto: determinista (nunca depende de red externa), basta para que
+// naturalWidth > 0 en el navegador, y no deja el mapa en negro.
+const PNG_1X1 = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR42mO48+QuAAU9Ap7JJ9MXAAAAAElFTkSuQmCC",
+  "base64",
+);
+
+function enviaPng(res) {
+  res.writeHead(200, {
+    "Content-Type": "image/png",
+    "Cache-Control": "no-store",
+    "Access-Control-Allow-Origin": "*",
+  });
+  res.end(PNG_1X1);
+}
+
 async function manejador(req, res) {
   const url = new URL(req.url, `http://localhost:${PUERTO}`);
+
+  // Teselas y fotos servidas por el propio mock: deterministas, sin depender
+  // de red externa (openstreetmap.org / fotocasa.es) durante las capturas e2e.
+  if (/^\/_t\/\d+\/\d+\/\d+\.png$/.test(url.pathname)) return enviaPng(res);
+  if (/^\/_foto\//.test(url.pathname)) return enviaPng(res);
+
   const ruta = url.pathname.replace(/^\/api\/v1/, "");
 
   if (req.method === "OPTIONS") return envia(res, 204, undefined);

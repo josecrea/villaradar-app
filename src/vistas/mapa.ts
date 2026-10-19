@@ -1,6 +1,7 @@
 // Mapa con Leaflet SOLO bajo demanda (await import), chunk aparte del shell.
 // Teselas OSM claras; solo items con lat && lng; honestidad: "N de M con coordenadas".
 import type { Item } from "../api/tipos";
+import { API_MOCK } from "../api/base";
 
 export function pintaBotonMapa(contenedor: HTMLElement, items: Item[]): void {
   contenedor.replaceChildren();
@@ -10,7 +11,10 @@ export function pintaBotonMapa(contenedor: HTMLElement, items: Item[]): void {
   boton.type = "button";
   boton.className = "boton-abrir-mapa";
   boton.textContent = "Ver mapa";
-  boton.addEventListener("click", () => abrirMapa(contenedor, conCoordenadas));
+  boton.addEventListener("click", () => {
+    if (document.getElementById("mapa-leaflet")) return; // ya está abierto, evita duplicar el id
+    void abrirMapa(contenedor, conCoordenadas);
+  });
   contenedor.appendChild(boton);
 
   const cobertura = document.createElement("p");
@@ -48,11 +52,18 @@ async function abrirMapa(contenedor: HTMLElement, conCoordenadas: Item[]): Promi
     shadowSize: [41, 41],
   });
 
-  const mapa = L.map(mapaDiv, { scrollWheelZoom: false }).setView(
-    [conCoordenadas[0].lat as number, conCoordenadas[0].lng as number],
-    11,
-  );
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  // Sin animaciones de zoom/pan/fade: además de respetar prefers-reduced-motion,
+  // hace la carga del mapa determinista para las capturas e2e (GRAVE 3).
+  const mapa = L.map(mapaDiv, {
+    scrollWheelZoom: false,
+    zoomAnimation: false,
+    fadeAnimation: false,
+    markerZoomAnimation: false,
+  }).setView([conCoordenadas[0].lat as number, conCoordenadas[0].lng as number], 11);
+  // En el mock (dev/e2e), teselas deterministas servidas por el propio mock
+  // (mismo origen, nunca dependen de red externa). En producción, OSM real.
+  const urlTeselas = API_MOCK ? "/_t/{z}/{x}/{y}.png" : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+  L.tileLayer(urlTeselas, {
     attribution: "© OpenStreetMap",
     maxZoom: 18,
   }).addTo(mapa);
