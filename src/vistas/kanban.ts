@@ -6,6 +6,7 @@ import { ETAPAS, etiquetaEtapa } from "./embudo";
 import { pintaTarjetaKanban } from "./tarjeta";
 import { DISPOSICIONES, type Disposicion } from "./disposiciones";
 import { cambiaEstado } from "../api/cliente";
+import { muestraAviso } from "./aviso";
 
 // Mapa etapa de destino → disposición representativa que la API acepta.
 // La etapa real la deriva el backend a partir de la disposición (ver
@@ -46,6 +47,7 @@ function abrirDialogoMover(id: string, tituloItem: string, onMovido: () => void)
         })
         .catch(() => {
           dialogo.close();
+          muestraAviso(`No se pudo mover «${tituloItem}». Inténtalo de nuevo.`);
         });
     });
     li.appendChild(boton);
@@ -126,9 +128,16 @@ function configuraArrastre(kanban: HTMLElement, items: Item[], onMovido: () => v
         const disposicion = DISPOSICION_POR_ETAPA[nuevaEtapa];
         const necesitaFecha = DISPOSICIONES.find((d) => d.valor === disposicion)?.necesitaRecordatorio;
         const recordatorioAt = necesitaFecha ? new Date(Date.now() + 86400000).toISOString() : undefined;
+        const tituloItem = item.titulo;
         cambiaEstado(origenId, disposicion, undefined, recordatorioAt)
           .then(onMovido)
-          .catch(() => undefined);
+          .catch(() => {
+            // La recarga normal del tablero (tras onMovido/éxito) ya refleja
+            // el estado real; si falla, no se llama a onMovido y la tarjeta
+            // se queda donde estaba (nunca se movió de verdad en el DOM) —
+            // pero el usuario debe saber que el arrastre NO se aplicó.
+            muestraAviso(`No se pudo mover «${tituloItem}». Inténtalo de nuevo.`);
+          });
       }
     }
     origenId = null;

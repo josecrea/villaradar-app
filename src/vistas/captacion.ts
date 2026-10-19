@@ -7,6 +7,7 @@ import { pintaBarraFiltros } from "./filtros";
 import { pintaBotonAbrirFiltros } from "./hojaFiltros";
 import { pintaBotonMapa } from "./mapa";
 import { leeHash, escribeHash } from "./estadoUrl";
+import { muestraAviso } from "./aviso";
 
 export async function pintaCaptacion(contenedor: HTMLElement): Promise<void> {
   const { filtros } = leeHash();
@@ -42,7 +43,7 @@ export async function pintaCaptacion(contenedor: HTMLElement): Promise<void> {
       const abrirFicha = (id: string) => {
         inmueble(id)
           .then((ficha) => abrirDrawerFicha(ficha, () => void recarga()))
-          .catch(() => undefined);
+          .catch(() => muestraAviso("No se pudo abrir la ficha. Inténtalo de nuevo."));
       };
 
       pintaFranjaMando(zonaMando, { datos: datosKpis, items: resultado.items, onAbrirFicha: abrirFicha });
@@ -76,7 +77,7 @@ export async function pintaCaptacion(contenedor: HTMLElement): Promise<void> {
         },
         onFiltrar: (nuevosFiltros) => escribeHash("/captacion", nuevosFiltros),
         onAbrirFicha: abrirFicha,
-        onExportarCsv: () => descargaCsv(filtros).catch(() => undefined),
+        onExportarCsv: () => descargaCsv(filtros).catch(() => muestraAviso("No se pudo exportar el CSV. Inténtalo de nuevo.")),
       });
     } catch {
       contenedor.textContent = "No se pudo cargar la captación.";
