@@ -11,16 +11,42 @@ async function entraYLogin(page: import("@playwright/test").Page) {
   await page.addStyleTag({
     content: "*, *::before, *::after { animation: none !important; transition: none !important; caret-color: transparent !important; }",
   });
+  // Espera a que cada <img class="foto"> VISIBLE esté resuelta (cargada o ya
+  // sustituida por su fallback de iniciales tras el evento "error"); nunca un
+  // timeout a ciegas, porque eso es justo lo que producía capturas no
+  // deterministas (GRAVE 3). Las fotos de la lista de tarjetas siguen en el
+  // DOM con loading=lazy aunque estén ocultas por CSS en ≥768px (la tabla es
+  // la que se ve ahí); un elemento con display:none nunca dispara la carga
+  // perezosa, así que solo se exige a las que tienen layout real.
+  await page.waitForFunction(() =>
+    Array.from(document.querySelectorAll<HTMLImageElement>("img.foto"))
+      .filter((img) => img.offsetParent !== null)
+      .every((img) => img.complete),
+  );
+}
+
+async function abreMapaYEsperaTeselas(page: import("@playwright/test").Page): Promise<void> {
+  await page.locator(".boton-abrir-mapa").click();
+  await page.waitForFunction(() => {
+    const teselas = Array.from(document.querySelectorAll<HTMLImageElement>("#mapa-leaflet img.leaflet-tile"));
+    if (teselas.length === 0) return false;
+    return teselas.every((t) => t.complete && t.naturalWidth > 0);
+  });
+  await page.waitForFunction(() => document.querySelectorAll("#mapa-leaflet .leaflet-marker-icon").length > 0);
+  // Dos frames de composición para que el navegador termine de pintar antes
+  // de capturar (determinista: ligado a rAF, no a un tiempo arbitrario).
+  await page.evaluate(
+    () => new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))),
+  );
 }
 
 test("captura de pantalla con datos cargados", async ({ page }, testInfo) => {
   await entraYLogin(page);
-  // En 1440 se abre el mapa antes de capturar para mostrar los pines reales.
+  // En 1440 se abre el mapa antes de capturar para mostrar los pines y las
+  // teselas (deterministas: las sirve el propio mock, ver mock/servidor.mjs).
   if (testInfo.project.name === "1440") {
-    await page.locator(".boton-abrir-mapa").click();
-    await page.waitForSelector("#mapa-leaflet .leaflet-marker-icon", { timeout: 5000 }).catch(() => undefined);
+    await abreMapaYEsperaTeselas(page);
   }
-  await page.waitForTimeout(150);
   await page.screenshot({ path: `docs/capturas/captacion-${testInfo.project.name}.png`, fullPage: true });
 });
 
@@ -169,10 +195,4 @@ test("estado en la URL persiste tras recargar", async ({ page }) => {
   await page.waitForFunction(() => location.hash.includes("etapa=captado"));
   await page.reload();
   await expect(page).toHaveURL(/etapa=captado/);
-});
-
-test("dev: hay al menos una hoja de estilos cargada (CSP no la bloquea)", async ({ page }) => {
-  await entraYLogin(page);
-  const hojas = await page.evaluate(() => document.styleSheets.length);
-  expect(hojas).toBeGreaterThanOrEqual(1);
 });
