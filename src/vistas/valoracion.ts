@@ -1,5 +1,5 @@
 // Vista #/valoracion: formulario, vista previa del cálculo y descarga del PDF.
-// Solo createElement/textContent: nunca innerHTML.
+// Solo createElement y textContent (nada de HTML en cadena).
 import { valora, descargaPdfValoracion, inmueble, facetas, ErrorApi } from "../api/cliente";
 import { IDIOMAS } from "../api/tipos";
 import type { EntradaValoracion, Idioma, TipoInmueble, ValoracionRespuesta, Testigo } from "../api/tipos";
