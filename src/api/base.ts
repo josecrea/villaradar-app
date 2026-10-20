@@ -10,6 +10,8 @@ export const URL_CONTACTOS: string =
   (import.meta.env.VITE_URL_CONTACTOS as string | undefined) ?? "https://odoo.okservice.es/odoo/crm";
 export const URL_STOCKS: string =
   (import.meta.env.VITE_URL_STOCKS as string | undefined) ?? "https://villasproperties.es";
+export const URL_VALORACION_ODOO: string =
+  (import.meta.env.VITE_URL_VALORACION_ODOO as string | undefined) ?? "https://odoo.okservice.es/odoo?cids=4";
 export const URL_VALORACION = "https://valoracion.zohmip.easypanel.host";
 
 const TOKEN_KEY = "vr.token";

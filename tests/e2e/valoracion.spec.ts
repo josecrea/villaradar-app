@@ -155,10 +155,12 @@ test("desde una ficha, el botón lleva a la valoración con datos precargados", 
   await expect(page.getByLabel("Municipio")).not.toHaveValue("");
 });
 
-test("menú: Valoración es nativa y Radar 2x1 abre la Mini App en pestaña nueva", async ({ page }) => {
+test("menú: Valoración abre Odoo (villasproperties.es) y Radar 2x1 abre la Mini App, ambos en pestaña nueva", async ({ page }) => {
   await entra(page, "#/captacion");
   const nav = page.getByRole("navigation", { name: "Módulos de VillaRadar" });
-  await expect(nav.getByRole("link", { name: "Valoración" })).toHaveAttribute("href", "#/valoracion");
+  const valoracion = nav.getByRole("link", { name: "Valoración" });
+  await expect(valoracion).toHaveAttribute("href", /odoo\.okservice\.es\/odoo\?cids=4/);
+  await expect(valoracion).toHaveAttribute("target", "_blank");
   const radar = nav.getByRole("link", { name: "Radar 2x1" });
   await expect(radar).toHaveAttribute("target", "_blank");
   await expect(radar).toHaveAttribute("href", URL_MINI_APP);

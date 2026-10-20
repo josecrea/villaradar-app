@@ -1,4 +1,4 @@
-import { URL_CONTACTOS, URL_STOCKS, URL_VALORACION } from "../api/base";
+import { URL_CONTACTOS, URL_STOCKS, URL_VALORACION, URL_VALORACION_ODOO } from "../api/base";
 
 interface ModuloMenu {
   etiqueta: string;
@@ -8,7 +8,7 @@ interface ModuloMenu {
 
 const MODULOS: ModuloMenu[] = [
   { etiqueta: "Captación", href: "#/captacion", nativo: true },
-  { etiqueta: "Valoración", href: "#/valoracion", nativo: true },
+  { etiqueta: "Valoración", href: URL_VALORACION_ODOO, nativo: false },
   { etiqueta: "Contactos", href: URL_CONTACTOS, nativo: false },
   { etiqueta: "Stocks", href: URL_STOCKS, nativo: false },
   { etiqueta: "Radar 2x1", href: URL_VALORACION, nativo: false },
