@@ -10,6 +10,7 @@
     "check:size": "node scripts/check-tamano.mjs",
     "check:fugas": "bash scripts/check-fugas.sh",
     "test:e2e": "playwright test",
+    "test:unit": "node --test tests/unit/popup.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {

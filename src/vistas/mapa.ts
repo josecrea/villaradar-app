@@ -1,5 +1,6 @@
 // Mapa con Leaflet SOLO bajo demanda (await import), chunk aparte del shell.
 // Teselas OSM claras; solo items con lat && lng; honestidad: "N de M con coordenadas".
+import { nodoPopup } from "./popup";
 import type { Item } from "../api/tipos";
 import { API_MOCK } from "../api/base";
 
@@ -69,6 +70,6 @@ async function abrirMapa(contenedor: HTMLElement, conCoordenadas: Item[]): Promi
   }).addTo(mapa);
 
   for (const item of conCoordenadas) {
-    L.marker([item.lat as number, item.lng as number], { icon: iconoPorDefecto }).addTo(mapa).bindPopup(item.titulo);
+    L.marker([item.lat as number, item.lng as number], { icon: iconoPorDefecto }).addTo(mapa).bindPopup(nodoPopup(item.titulo));
   }
 }

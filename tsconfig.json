@@ -11,6 +11,7 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "noEmit": true,
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true
   },
   "include": ["src", "scripts", "mock", "playwright.config.ts", "tests"]

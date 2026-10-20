@@ -1,4 +1,4 @@
-import { EFECTIVO_BASE, getToken, clearToken } from "./base";
+import { EFECTIVO_BASE, getToken, clearToken, sesionExpirada } from "./base";
 import type { Novedades, Ficha, Contacto, Facetas, LoginRespuesta, Filtros, Kpis } from "./tipos";
 
 export class ErrorApi extends Error {
@@ -19,7 +19,9 @@ async function peticion<T>(ruta: string, opciones: RequestInit = {}): Promise<T>
   }
   const resp = await fetch(`${EFECTIVO_BASE}${ruta}`, { ...opciones, headers: cabeceras });
   if (resp.status === 401) {
-    clearToken();
+    // En /login un 401 es "clave incorrecta": no es sesión caducada.
+    if (ruta === "/login") clearToken();
+    else sesionExpirada();
     throw new ErrorApi(401, "sesion expirada");
   }
   if (!resp.ok) {
