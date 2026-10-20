@@ -7,7 +7,7 @@ export const API_MOCK: boolean = import.meta.env.VITE_API_MOCK === "1";
 export const EFECTIVO_BASE: string = API_MOCK ? "/api/v1" : API_BASE;
 
 export const URL_CONTACTOS: string =
-  (import.meta.env.VITE_URL_CONTACTOS as string | undefined) ?? "https://odoo.okservice.es/odoo/crm";
+  (import.meta.env.VITE_URL_CONTACTOS as string | undefined) ?? "https://odoo.okservice.es/odoo/crm?cids=4";
 export const URL_STOCKS: string =
   (import.meta.env.VITE_URL_STOCKS as string | undefined) ?? "https://villasproperties.es";
 export const URL_VALORACION_ODOO: string =
