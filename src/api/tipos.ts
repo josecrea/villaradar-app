@@ -168,20 +168,26 @@ export interface Valoracion {
 /** Lo que devuelve POST /api/v1/valoracion: igual, con el texto del aviso en castellano. */
 export type ValoracionRespuesta = Omit<Valoracion, "avisos"> & { avisos: (Aviso & { texto: string })[] };
 
-/** Entrada de POST /valoracion y /valoracion/pdf. La API es .strict(): ninguna clave más. */
+/**
+ * Entrada de POST /valoracion y /valoracion/pdf. La API es .strict(): ninguna clave más.
+ * Rangos (más estrictos entre el zod de la API y el encargo): direccion 3-160; cp 38xxx;
+ * municipio 2-60; zona <=60; m2 entero 10-10000; habitaciones 0-20; banos 0-10;
+ * refCatastral 14/18/20 [0-9A-Z]; precioPropietario entero 10000-20000000;
+ * observaciones <=1000; listingId <=80.
+ */
 export interface EntradaValoracion {
   idioma: Idioma;
   direccion: string;
-  cp: string; // 38xxx
+  cp: string;
   municipio: string;
   zona?: string;
   tipo: TipoInmueble;
   estado: "segunda_mano" | "obra_nueva";
-  m2Declarados: number; // entero 10-10000
-  habitaciones: number; // entero 0-20
-  banos: number; // entero 0-10
-  refCatastral?: string; // 14, 18 o 20 caracteres [0-9A-Z]
+  m2: number;
+  habitaciones: number;
+  banos: number;
+  refCatastral?: string;
   precioPropietario?: number;
-  observaciones?: string; // máx. 1200
+  observaciones?: string;
   listingId?: string;
 }

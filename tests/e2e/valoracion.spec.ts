@@ -34,7 +34,7 @@ test("enviar vacío muestra errores y no hace ninguna petición a /valoracion", 
   await expect(direccion).toHaveAttribute("aria-describedby", "vf-direccion-error");
   await expect(page.locator("#vf-direccion-error")).toBeVisible();
   await expect(page.locator("#vf-cp-error")).toBeVisible();
-  await expect(page.locator("#vf-m2Declarados-error")).toBeVisible();
+  await expect(page.locator("#vf-m2-error")).toBeVisible();
   expect(peticiones).toHaveLength(0);
 });
 
@@ -121,5 +121,7 @@ test("accesibilidad, sin desbordes y captura con la vista previa", async ({ page
   }));
   expect(scrollWidth, `scrollWidth=${scrollWidth} clientWidth=${clientWidth}`).toBeLessThanOrEqual(clientWidth);
 
+  // Sin ratón sobre ningún campo: el :hover cambiaría píxeles entre pasadas.
+  await page.mouse.move(0, 0);
   await page.screenshot({ path: `docs/capturas/valoracion-${testInfo.project.name}.png`, fullPage: true });
 });

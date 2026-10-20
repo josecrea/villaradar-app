@@ -27,7 +27,9 @@ const ESTADOS: Array<[EntradaValoracion["estado"], string]> = [
   ["obra_nueva", "Obra nueva"],
 ];
 
-const MAX_OBSERVACIONES = 1200;
+const MAX_OBSERVACIONES = 1000; // zod de la API: 1000 (el encargo decía 1200)
+// Rangos = zod de la API (src/informe/entrada.ts), tomando el más estricto cuando
+// el encargo y el zod difieren (ver PR). La API es .strict().
 const RE_CP = /^38\d{3}$/;
 const RE_REF_CATASTRAL = /^[0-9A-Z]{14}([0-9A-Z]{4}([0-9A-Z]{2})?)?$/;
 
@@ -79,15 +81,15 @@ function leeEntrada(c: Record<Clave, Control>, listingId: string | null): Result
   const v = (k: Clave): string => c[k].value.trim();
 
   const direccion = v("direccion");
-  if (direccion.length < 3 || direccion.length > 200) errores.push(["direccion", "Indica la dirección (3 a 200 caracteres)."]);
+  if (direccion.length < 3 || direccion.length > 160) errores.push(["direccion", "Indica la dirección (3 a 160 caracteres)."]);
   const cp = v("cp");
   if (!RE_CP.test(cp)) errores.push(["cp", "El código postal debe ser 38 seguido de tres cifras."]);
   const municipio = v("municipio");
-  if (municipio.length < 2 || municipio.length > 80) errores.push(["municipio", "Indica el municipio."]);
+  if (municipio.length < 2 || municipio.length > 60) errores.push(["municipio", "Indica el municipio (2 a 60 caracteres)."]);
   const zona = v("zona");
-  if (zona.length > 80) errores.push(["zona", "La zona admite 80 caracteres como máximo."]);
-  const m2 = enteroEnRango(v("m2Declarados"), 10, 10000);
-  if (m2 === null) errores.push(["m2Declarados", "Superficie: número entero entre 10 y 10000."]);
+  if (zona.length > 60) errores.push(["zona", "La zona admite 60 caracteres como máximo."]);
+  const m2 = enteroEnRango(v("m2"), 10, 10000);
+  if (m2 === null) errores.push(["m2", "Superficie: número entero entre 10 y 10000."]);
   const hab = enteroEnRango(v("habitaciones"), 0, 20);
   if (hab === null) errores.push(["habitaciones", "Habitaciones: número entero entre 0 y 20."]);
   const banos = enteroEnRango(v("banos"), 0, 10);
@@ -98,8 +100,8 @@ function leeEntrada(c: Record<Clave, Control>, listingId: string | null): Result
     errores.push(["refCatastral", "Referencia catastral de 14, 18 o 20 caracteres (cifras y letras)."]);
   }
   const precioTexto = v("precioPropietario");
-  const precio = precioTexto ? enteroEnRango(precioTexto, 1, 100_000_000) : null;
-  if (precioTexto && precio === null) errores.push(["precioPropietario", "Precio: número entero en euros."]);
+  const precio = precioTexto ? enteroEnRango(precioTexto, 10_000, 20_000_000) : null;
+  if (precioTexto && precio === null) errores.push(["precioPropietario", "Precio: número entero entre 10000 y 20000000 €."]);
   const obs = c.observaciones.value.trim();
   if (obs.length > MAX_OBSERVACIONES) {
     errores.push(["observaciones", `Observaciones: ${MAX_OBSERVACIONES} caracteres como máximo.`]);
@@ -116,7 +118,7 @@ function leeEntrada(c: Record<Clave, Control>, listingId: string | null): Result
     municipio,
     tipo: c.tipo.value as TipoInmueble,
     estado: c.estado.value as EntradaValoracion["estado"],
-    m2Declarados: m2,
+    m2,
     habitaciones: hab,
     banos,
   };
@@ -335,7 +337,7 @@ function creaFormulario(): Campos {
   opciones(estado, ESTADOS);
   campo("estado", "Estado", estado);
 
-  campo("m2Declarados", "Superficie (m²)", entero());
+  campo("m2", "Superficie (m²)", entero());
   campo("habitaciones", "Habitaciones", entero());
   campo("banos", "Baños", entero());
   campo("refCatastral", "Referencia catastral (opcional)", texto(), "14, 18 o 20 caracteres.");
@@ -375,13 +377,13 @@ function limpiaErrores(c: Campos): void {
 function listingDeLaUrl(): string | null {
   const qs = location.hash.split("?")[1] ?? "";
   const id = new URLSearchParams(qs).get("listing");
-  return id && id.length <= 100 ? id : null;
+  return id && id.length <= 80 ? id : null;
 }
 
 async function precarga(c: Campos, id: string): Promise<void> {
   const ficha = await inmueble(id);
   c.controles.municipio.value = ficha.municipio;
-  if (ficha.m2 !== null) c.controles.m2Declarados.value = String(ficha.m2);
+  if (ficha.m2 !== null) c.controles.m2.value = String(ficha.m2);
   if (ficha.hab !== null) c.controles.habitaciones.value = String(ficha.hab);
   if (ficha.banos !== null) c.controles.banos.value = String(ficha.banos);
   if (TIPOS.some(([valor]) => valor === ficha.tipo)) c.controles.tipo.value = ficha.tipo;

@@ -106,7 +106,7 @@ const IDIOMAS_VALIDOS = ["es", "en", "it", "de", "fr", "nl"];
 const TIPOS_VALIDOS = ["piso", "atico", "duplex", "estudio", "casa", "chalet"];
 const ESTADOS_VALIDOS = ["segunda_mano", "obra_nueva"];
 const CLAVES_VALORACION = new Set([
-  "idioma", "direccion", "cp", "municipio", "zona", "tipo", "estado", "m2Declarados",
+  "idioma", "direccion", "cp", "municipio", "zona", "tipo", "estado", "m2",
   "habitaciones", "banos", "refCatastral", "precioPropietario", "observaciones", "listingId",
 ]);
 
@@ -117,20 +117,22 @@ function enteroEn(v, min, max) {
 function validaValoracion(c) {
   const campos = Object.keys(c).filter((k) => !CLAVES_VALORACION.has(k));
   const malo = (k) => campos.push(k);
-  if (!IDIOMAS_VALIDOS.includes(c.idioma)) malo("idioma");
-  if (typeof c.direccion !== "string" || c.direccion.trim().length < 3 || c.direccion.length > 200) malo("direccion");
+  if (c.idioma !== undefined && !IDIOMAS_VALIDOS.includes(c.idioma)) malo("idioma");
+  if (typeof c.direccion !== "string" || c.direccion.trim().length < 3 || c.direccion.length > 160) malo("direccion");
   if (typeof c.cp !== "string" || !/^38\d{3}$/.test(c.cp)) malo("cp");
-  if (typeof c.municipio !== "string" || c.municipio.trim().length < 2) malo("municipio");
+  if (typeof c.municipio !== "string" || c.municipio.trim().length < 2 || c.municipio.length > 60) malo("municipio");
   if (!TIPOS_VALIDOS.includes(c.tipo)) malo("tipo");
-  if (!ESTADOS_VALIDOS.includes(c.estado)) malo("estado");
-  if (!enteroEn(c.m2Declarados, 10, 10000)) malo("m2Declarados");
+  if (c.zona !== undefined && (typeof c.zona !== "string" || c.zona.trim().length < 1 || c.zona.length > 60)) malo("zona");
+  if (c.estado !== undefined && !ESTADOS_VALIDOS.includes(c.estado)) malo("estado");
+  if (c.listingId !== undefined && (typeof c.listingId !== "string" || c.listingId.length < 1 || c.listingId.length > 80)) malo("listingId");
+  if (!enteroEn(c.m2, 10, 10000)) malo("m2");
   if (!enteroEn(c.habitaciones, 0, 20)) malo("habitaciones");
   if (!enteroEn(c.banos, 0, 10)) malo("banos");
   if (c.refCatastral !== undefined && !/^[0-9A-Z]{14}([0-9A-Z]{4}([0-9A-Z]{2})?)?$/.test(String(c.refCatastral).toUpperCase())) {
     malo("refCatastral");
   }
-  if (c.precioPropietario !== undefined && !enteroEn(c.precioPropietario, 1, 100000000)) malo("precioPropietario");
-  if (c.observaciones !== undefined && (typeof c.observaciones !== "string" || c.observaciones.length > 1200)) malo("observaciones");
+  if (c.precioPropietario !== undefined && !enteroEn(c.precioPropietario, 10000, 20000000)) malo("precioPropietario");
+  if (c.observaciones !== undefined && (typeof c.observaciones !== "string" || c.observaciones.length > 1000)) malo("observaciones");
   return campos;
 }
 
