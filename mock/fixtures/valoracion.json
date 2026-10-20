@@ -1,0 +1,66 @@
+{
+  "id": "val-mock-0001",
+  "generadoAt": "2026-10-20T10:00:00.000Z",
+  "idioma": "it",
+  "inmueble": {
+    "direccion": "Calle de ejemplo 1",
+    "cp": "38639",
+    "municipio": "San Miguel de Abona",
+    "zona": null,
+    "tipo": "piso",
+    "estado": "segunda_mano",
+    "habitaciones": 2,
+    "banos": 1,
+    "refCatastral": null,
+    "precioPropietario": null,
+    "observaciones": null
+  },
+  "superficie": {
+    "m2Declarados": 93,
+    "m2Catastro": null,
+    "desviacionPct": null,
+    "m2Base": 93,
+    "origenBase": "declarados",
+    "catastro": "sin_ref"
+  },
+  "escriturado": {
+    "eurM2": 3149,
+    "compraventas": 41,
+    "combo": { "tipo": 9, "clase": 14 },
+    "fuente": "arcgis",
+    "fecha": "2026-10-20",
+    "valor": 293000
+  },
+  "anuncios": {
+    "n": 12,
+    "criterios": { "zona": null, "m2Pct": 20, "habDelta": 1, "banosDelta": 1 },
+    "relajado": [],
+    "eurM2": { "p25": 3050, "p50": 3220, "p75": 3400 },
+    "valor": { "p25": 284000, "p50": 299000, "p75": 316000 }
+  },
+  "brechaOfertaEscrituraPct": 2.0,
+  "propuesta": {
+    "abstencion": false,
+    "motivo": "anuncios",
+    "ventaRapida": 293000,
+    "salida": 299000,
+    "techo": 316000,
+    "posicionPropietario": null
+  },
+  "testigos": [
+    { "estado": "activo", "dias": { "n": 21, "minimo": false }, "precio": 289000, "eurM2": 3050, "m2": 95, "hab": 2, "banos": 1, "zona": "San Miguel de Abona", "portal": "idealista" },
+    { "estado": "activo", "dias": null, "precio": 299000, "eurM2": 3220, "m2": 93, "hab": 2, "banos": 2, "zona": "Las Chafiras", "portal": "fotocasa" },
+    { "estado": "desconocido", "dias": null, "precio": 316000, "eurM2": 3400, "m2": 93, "hab": 3, "banos": 1, "zona": "San Miguel de Abona", "portal": "pisos" }
+  ],
+  "actividadDesde": null,
+  "actividadVisible": false,
+  "tendencia": null,
+  "compradores": null,
+  "avisos": [
+    {
+      "codigo": "sin_catastro",
+      "params": {},
+      "texto": "No se indicó referencia catastral: se usa la superficie declarada."
+    }
+  ]
+}

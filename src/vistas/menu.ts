@@ -8,9 +8,10 @@ interface ModuloMenu {
 
 const MODULOS: ModuloMenu[] = [
   { etiqueta: "Captación", href: "#/captacion", nativo: true },
+  { etiqueta: "Valoración", href: "#/valoracion", nativo: true },
   { etiqueta: "Contactos", href: URL_CONTACTOS, nativo: false },
   { etiqueta: "Stocks", href: URL_STOCKS, nativo: false },
-  { etiqueta: "Valoración", href: URL_VALORACION, nativo: false },
+  { etiqueta: "Radar 2x1", href: URL_VALORACION, nativo: false },
 ];
 
 export function pintaMenu(contenedor: HTMLElement, moduloActivo: string): void {

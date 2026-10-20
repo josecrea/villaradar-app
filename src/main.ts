@@ -4,6 +4,7 @@ import "./estilos/componentes.css";
 import { sesionGuardada, pintaFormularioLogin, cerrarSesionLocal } from "./auth/login";
 import { pintaMenu } from "./vistas/menu";
 import { pintaCaptacion } from "./vistas/captacion";
+import { leeHash } from "./vistas/estadoUrl";
 
 const raiz = document.querySelector<HTMLDivElement>("#app");
 if (!raiz) throw new Error("falta #app en index.html");
@@ -41,12 +42,20 @@ function pintaApp(): void {
   cabecera.appendChild(infoSesion);
 
   raiz!.appendChild(cabecera);
-  pintaMenu(menuContenedor, "captación");
+  const esValoracion = leeHash().ruta === "/valoracion";
+  pintaMenu(menuContenedor, esValoracion ? "valoración" : "captación");
 
   const main = document.createElement("main");
   main.id = "contenido-principal";
   raiz!.appendChild(main);
 
+  if (esValoracion) {
+    // Chunk aparte: la vista de valoración no pesa en la carga de captación.
+    void import("./vistas/valoracion").then(({ pintaValoracion }) => {
+      if (main.isConnected) pintaValoracion(main);
+    });
+    return;
+  }
   void pintaCaptacion(main);
 }
 

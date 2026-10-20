@@ -1,13 +1,29 @@
 import { EFECTIVO_BASE, getToken, clearToken } from "./base";
-import type { Novedades, Ficha, Contacto, Facetas, LoginRespuesta, Filtros, Kpis } from "./tipos";
+import type {
+  Novedades,
+  Ficha,
+  Contacto,
+  Facetas,
+  LoginRespuesta,
+  Filtros,
+  Kpis,
+  EntradaValoracion,
+  ValoracionRespuesta,
+} from "./tipos";
 
 export class ErrorApi extends Error {
   constructor(
     public status: number,
     message: string,
+    public campos?: string[],
   ) {
     super(message);
   }
+}
+
+function camposDe(cuerpo: unknown): string[] | undefined {
+  const campos = (cuerpo as { campos?: unknown } | null)?.campos;
+  return Array.isArray(campos) ? campos.filter((c): c is string => typeof c === "string") : undefined;
 }
 
 async function peticion<T>(ruta: string, opciones: RequestInit = {}): Promise<T> {
@@ -24,7 +40,7 @@ async function peticion<T>(ruta: string, opciones: RequestInit = {}): Promise<T>
   }
   if (!resp.ok) {
     const cuerpo = await resp.json().catch(() => ({ error: "error" }));
-    throw new ErrorApi(resp.status, cuerpo.error ?? `error ${resp.status}`);
+    throw new ErrorApi(resp.status, cuerpo.error ?? `error ${resp.status}`, camposDe(cuerpo));
   }
   if (resp.status === 204) return undefined as T;
   return (await resp.json()) as T;
@@ -102,6 +118,39 @@ export async function descargaCsv(filtros: Filtros): Promise<void> {
   const enlace = document.createElement("a");
   enlace.href = url;
   enlace.download = "captacion.csv";
+  document.body.appendChild(enlace);
+  enlace.click();
+  enlace.remove();
+  URL.revokeObjectURL(url);
+}
+
+export function valora(entrada: EntradaValoracion): Promise<ValoracionRespuesta> {
+  return peticion<ValoracionRespuesta>("/valoracion", { method: "POST", body: JSON.stringify(entrada) });
+}
+
+export async function descargaPdfValoracion(entrada: EntradaValoracion): Promise<void> {
+  const token = getToken();
+  const resp = await fetch(`${EFECTIVO_BASE}/valoracion/pdf`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(entrada),
+  });
+  if (resp.status === 401) {
+    clearToken();
+    throw new ErrorApi(401, "sesion expirada");
+  }
+  if (!resp.ok) {
+    const cuerpo = await resp.json().catch(() => ({ error: "error" }));
+    throw new ErrorApi(resp.status, cuerpo.error ?? `error ${resp.status}`, camposDe(cuerpo));
+  }
+  const blob = await resp.blob();
+  const url = URL.createObjectURL(blob);
+  const enlace = document.createElement("a");
+  enlace.href = url;
+  enlace.download = `valoracion-${entrada.cp}-${new Date().toISOString().slice(0, 10)}.pdf`;
   document.body.appendChild(enlace);
   enlace.click();
   enlace.remove();

@@ -126,3 +126,62 @@ export interface Kpis {
   crmFallos: number;
   actualizadoAt: string;
 }
+
+// --- Valoración (contrato común OT-1a; copia literal de src/informe/tipos.ts de la API) ---
+export const IDIOMAS = ["es", "en", "it", "de", "fr", "nl"] as const;
+export type Idioma = (typeof IDIOMAS)[number];
+export type TipoInmueble = "piso" | "atico" | "duplex" | "estudio" | "casa" | "chalet";
+export type CodigoAviso =
+  | "superficie_desviada" | "sin_catastro" | "catastro_fallo" | "catastro_varios_inmuebles"
+  | "cp_no_coincide_catastro" | "escriturado_poca_muestra" | "escriturado_combo_generico"
+  | "escriturado_copia_local" | "arcgis_fallo" | "sin_escriturado" | "comparables_relajados"
+  | "pocos_comparables" | "escriturado_supera_oferta" | "abstencion" | "precio_propietario_fuera_mercado";
+export interface Aviso { codigo: CodigoAviso; params: Record<string, string | number> }
+export type PasoRelajacion = "banos" | "habitaciones_2" | "m2_30" | "zona";
+export interface Percentiles { p25: number; p50: number; p75: number }
+export interface Testigo {
+  estado: "activo" | "inactivo" | "desconocido";
+  dias: { n: number; minimo: boolean } | null;
+  precio: number; eurM2: number; m2: number; hab: number | null; banos: number | null; zona: string; portal: string;
+}
+export interface Valoracion {
+  id: string; generadoAt: string; idioma: Idioma;
+  inmueble: { direccion: string; cp: string; municipio: string; zona: string | null; tipo: TipoInmueble;
+    estado: "segunda_mano" | "obra_nueva"; habitaciones: number; banos: number; refCatastral: string | null;
+    precioPropietario: number | null; observaciones: string | null };
+  superficie: { m2Declarados: number; m2Catastro: number | null; desviacionPct: number | null; m2Base: number;
+    origenBase: "catastro" | "declarados"; catastro: "ok" | "sin_ref" | "varios" | "fallo" };
+  escriturado: { eurM2: number; compraventas: number | null; combo: { tipo: 9 | 7 | 99; clase: 14 | 15 | 99 };
+    fuente: "arcgis" | "latest_json"; fecha: string; valor: number } | null;
+  anuncios: { n: number; criterios: { zona: string | null; m2Pct: 20 | 30; habDelta: 1 | 2; banosDelta: 1 | null };
+    relajado: PasoRelajacion[]; eurM2: Percentiles | null; valor: Percentiles | null };
+  brechaOfertaEscrituraPct: number | null;
+  propuesta: { abstencion: boolean; motivo: "sin_evidencia" | "solo_escriturado" | "anuncios";
+    ventaRapida: number | null; salida: number | null; techo: number | null;
+    posicionPropietario: "por_debajo" | "venta_rapida_salida" | "salida_techo" | "fuera_de_mercado" | null };
+  testigos: Testigo[];
+  actividadDesde: string | null; actividadVisible: boolean;
+  tendencia: { periodo: string; variacionAnualPct: number } | null;
+  compradores: { pctExtranjeros: number; primeraNacionalidad: string | null } | null;
+  avisos: Aviso[];
+}
+/** Lo que devuelve POST /api/v1/valoracion: igual, con el texto del aviso en castellano. */
+export type ValoracionRespuesta = Omit<Valoracion, "avisos"> & { avisos: (Aviso & { texto: string })[] };
+
+/** Entrada de POST /valoracion y /valoracion/pdf. La API es .strict(): ninguna clave más. */
+export interface EntradaValoracion {
+  idioma: Idioma;
+  direccion: string;
+  cp: string; // 38xxx
+  municipio: string;
+  zona?: string;
+  tipo: TipoInmueble;
+  estado: "segunda_mano" | "obra_nueva";
+  m2Declarados: number; // entero 10-10000
+  habitaciones: number; // entero 0-20
+  banos: number; // entero 0-10
+  refCatastral?: string; // 14, 18 o 20 caracteres [0-9A-Z]
+  precioPropietario?: number;
+  observaciones?: string; // máx. 1200
+  listingId?: string;
+}

@@ -44,6 +44,16 @@ export function pintaFicha(contenedor: HTMLElement, ficha: Ficha, onVolver: () =
   botonVolver.addEventListener("click", onVolver);
   contenedor.appendChild(botonVolver);
 
+  const botonInforme = document.createElement("button");
+  botonInforme.type = "button";
+  botonInforme.className = "boton-secundario";
+  botonInforme.textContent = "Informe de valoración";
+  botonInforme.addEventListener("click", () => {
+    botonInforme.closest("dialog")?.close();
+    location.hash = "#/valoracion?listing=" + encodeURIComponent(ficha.id);
+  });
+  contenedor.appendChild(botonInforme);
+
   const articulo = document.createElement("article");
   articulo.className = "ficha";
 
