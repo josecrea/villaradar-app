@@ -828,19 +828,62 @@ dialog.dialogo-columnas form {
   overflow-x: auto;
   max-width: 100%;
 }
-.tabla-testigos {
+.tabla-testigos,
+.tabla-zona,
+.tabla-serie {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
 }
 .tabla-testigos th,
-.tabla-testigos td {
+.tabla-testigos td,
+.tabla-zona th,
+.tabla-zona td,
+.tabla-serie th,
+.tabla-serie td {
   padding: var(--espacio-1) var(--espacio-3);
   border-bottom: 1px solid var(--line);
   text-align: left;
   white-space: nowrap;
 }
-.tabla-testigos th {
+.tabla-testigos th,
+.tabla-zona th,
+.tabla-serie th {
   color: var(--mut);
   font-weight: 600;
+}
+/* Tabla de zona: el rótulo de fila pesa más que las cabeceras de columna; el aparte va debajo. */
+.tabla-zona tbody th {
+  color: var(--txt);
+}
+.rotulo-aparte {
+  display: block;
+  color: var(--mut);
+  font-weight: 400;
+  font-size: 12px;
+}
+.nota-tabla {
+  margin: var(--espacio-2) 0 0;
+  font-size: 13px;
+  color: var(--mut);
+  overflow-wrap: anywhere;
+}
+/* La salida recomendada manda: es la cifra que se propone al propietario. */
+.valoracion-datos dd.cifra-destacada {
+  font-size: 20px;
+  font-family: var(--fuente-titular);
+}
+/* Límites de datos: declarados, no decorativos; aparte del cuerpo y con borde ámbar. */
+.valoracion-limites {
+  display: grid;
+  gap: var(--espacio-2);
+  padding: var(--espacio-3) var(--espacio-4);
+  border-left: 3px solid var(--amber);
+  background: var(--surf);
+  border-radius: var(--radio);
+}
+.valoracion-limites p {
+  margin: 0;
+  font-size: 13px;
+  overflow-wrap: anywhere;
 }
