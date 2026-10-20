@@ -1,0 +1,679 @@
+/* Componentes del puesto de mando: franja de KPIs, kanban, tarjetas, drawer, mapa, hoja de filtros. */
+
+/* --- Franja de mando --- */
+.franja-mando {
+  background: var(--tinta-honda);
+  color: var(--hueso);
+  padding: var(--espacio-4);
+  display: flex;
+  gap: var(--espacio-5);
+  overflow-x: auto;
+  min-width: 0;
+}
+.cifra-mando {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.cifra-mando .valor {
+  font-family: var(--fuente-titular);
+  font-variant-numeric: tabular-nums;
+  font-size: clamp(var(--cifra-min), 6vw, var(--cifra-max));
+  line-height: 1;
+  color: var(--hueso);
+}
+.cifra-mando .valor.acento {
+  color: var(--salvia);
+}
+.cifra-mando .etiqueta {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: oklch(78% 0.02 230);
+}
+.aviso-crm {
+  margin-left: auto;
+  align-self: center;
+  background: oklch(14% 0.02 250);
+  color: var(--hueso);
+  border: 1px solid var(--salvia);
+  border-radius: var(--radio-pildora);
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* --- Botón de contacto (único lugar con verde WhatsApp) --- */
+.boton-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--wa);
+  color: #fff;
+  border: none;
+  border-radius: var(--radio-pildora);
+  padding: 8px 16px;
+  font-weight: 700;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+/* --- Barra de filtros --- */
+.barra-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--espacio-3);
+  background: var(--surf);
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--tinta);
+  border-radius: var(--radio);
+  padding: var(--espacio-3) var(--espacio-4);
+  margin-bottom: var(--espacio-3);
+}
+.campo-filtro {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: var(--mut);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  min-width: 0;
+}
+.campo-filtro select,
+.campo-filtro input {
+  font-size: 13px;
+  padding: 4px 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radio-input);
+  background: var(--surf);
+  color: var(--txt);
+  text-transform: none;
+  max-width: 100%;
+}
+.barra-filtros button[type="submit"] {
+  background: var(--tinta-honda);
+  color: var(--hueso);
+  border: none;
+  border-radius: var(--radio-pildora);
+  padding: 6px 14px;
+  font-weight: 700;
+  font-size: 12px;
+  align-self: center;
+}
+
+/* --- Hoja de filtros (móvil) --- */
+.boton-abrir-filtros {
+  display: none;
+  width: 100%;
+  margin-bottom: var(--espacio-3);
+  background: var(--surf2);
+  border: 1px solid var(--line);
+  border-radius: var(--radio-pildora);
+  padding: var(--espacio-2) var(--espacio-3);
+  font-weight: 600;
+  font-size: 13px;
+}
+dialog.hoja-filtros {
+  width: 100%;
+  max-width: 100%;
+  margin: auto 0 0 0;
+  border: none;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  padding: var(--espacio-4);
+  max-height: 85vh;
+  overflow-y: auto;
+}
+dialog.hoja-filtros::backdrop {
+  background: rgb(0 0 0 / 0.4);
+}
+dialog.hoja-filtros .barra-filtros {
+  flex-direction: column;
+  align-items: stretch;
+  border-top: none;
+  border: none;
+  padding: 0;
+  margin-bottom: 0;
+}
+.hoja-filtros-cerrar {
+  width: 100%;
+  margin-top: var(--espacio-3);
+  background: var(--tinta-honda);
+  color: var(--hueso);
+  border: none;
+  border-radius: var(--radio-pildora);
+  padding: var(--espacio-2);
+  font-weight: 700;
+}
+
+/* --- Barra superior de resultados --- */
+.barra-tabla {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  margin-bottom: var(--espacio-3);
+  flex-wrap: wrap;
+}
+.chips-filtro {
+  display: flex;
+  gap: var(--espacio-1);
+  flex: 1;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.chip-filtro {
+  background: var(--surf2);
+  border: 1px solid var(--line);
+  border-radius: var(--radio-pildora);
+  padding: 2px 10px;
+  font-size: 12px;
+}
+.total-resultados {
+  color: var(--mut);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* --- Tabla densa (≥768px) --- */
+.tabla-densa {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  background: var(--surf);
+  table-layout: fixed;
+}
+.tabla-densa th {
+  text-align: left;
+  border-bottom: 2px solid var(--tinta);
+  padding: var(--espacio-2) var(--espacio-2);
+  overflow: hidden;
+}
+.tabla-densa th button {
+  background: none;
+  border: none;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--txt);
+  padding: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tabla-densa td {
+  padding: var(--espacio-2);
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fila-item {
+  transition: background var(--duracion-rapida);
+}
+.fila-item:hover,
+.fila-item:focus-visible {
+  background: var(--surf2);
+}
+.col-precio strong {
+  font-size: 15px;
+}
+.precio-m2 {
+  color: var(--mut);
+  font-size: 11px;
+}
+.badge-bajada {
+  display: inline-block;
+  margin-left: var(--espacio-1);
+  background: oklch(92% 0.1 25);
+  color: oklch(38% 0.19 25);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: var(--radio-pildora);
+}
+.tabla-vacia {
+  color: var(--mut);
+  padding: var(--espacio-4) 0;
+}
+.boton-fila {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--txt);
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+  transition: text-decoration-color var(--duracion-rapida);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.boton-fila:hover,
+.boton-fila:focus-visible {
+  text-decoration-color: var(--g);
+}
+
+.chip-etapa {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radio-pildora);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.etapa-novedad {
+  background: oklch(92% 0.05 230);
+  color: oklch(35% 0.11 230);
+}
+.etapa-contactado {
+  background: oklch(94% 0.08 70);
+  color: oklch(36% 0.13 70);
+}
+.etapa-en-espera {
+  background: oklch(94% 0.03 250);
+  color: oklch(38% 0.03 250);
+}
+.etapa-captado {
+  background: oklch(92% 0.1 150);
+  color: oklch(32% 0.13 150);
+}
+.etapa-rechazado {
+  background: oklch(92% 0.1 25);
+  color: oklch(38% 0.19 25);
+}
+
+/* --- Tarjetas (≤767px: lista de tarjetas en vez de tabla) --- */
+.lista-tarjetas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-3);
+}
+.tarjeta-item {
+  background: var(--surf);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: var(--espacio-3);
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  gap: var(--espacio-3);
+  min-width: 0;
+}
+.tarjeta-item .foto {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  background: var(--surf2);
+  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--mut);
+  overflow: hidden;
+}
+.tarjeta-item .cuerpo {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.tarjeta-item .titulo-tarjeta {
+  font-weight: 700;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: none;
+  border: none;
+  text-align: left;
+  color: var(--txt);
+  padding: 0;
+}
+.tarjeta-item .meta-tarjeta {
+  font-size: 12px;
+  color: var(--mut);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tarjeta-item .precio-tarjeta {
+  font-size: 16px;
+  font-weight: 700;
+}
+.tarjeta-item .pie-tarjeta {
+  display: flex;
+  align-items: center;
+  gap: var(--espacio-2);
+  flex-wrap: wrap;
+}
+
+/* --- Kanban (≥1200px) --- */
+.kanban {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--espacio-3);
+  align-items: start;
+}
+.kanban-columna {
+  background: var(--surf2);
+  border-radius: 12px;
+  padding: var(--espacio-2);
+  min-width: 0;
+  min-height: 80px;
+}
+.kanban-columna h2 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mut);
+  margin: 0 0 var(--espacio-2);
+  display: flex;
+  justify-content: space-between;
+}
+.kanban-columna.diana-activa {
+  outline: 2px dashed var(--salvia);
+  outline-offset: 2px;
+}
+.kanban-tarjeta {
+  background: var(--surf);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: var(--espacio-2);
+  margin-bottom: var(--espacio-2);
+  touch-action: pan-y;
+}
+.kanban-tarjeta .asa-arrastre {
+  touch-action: none;
+  cursor: grab;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  background: none;
+  border: none;
+  text-align: left;
+  padding: 0;
+}
+.kanban-tarjeta .asa-arrastre:active {
+  cursor: grabbing;
+}
+.kanban-tarjeta .titulo-kanban {
+  font-weight: 700;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-wrap: balance;
+  min-width: 0;
+}
+.kanban-tarjeta .meta-kanban {
+  font-size: 11px;
+  color: var(--mut);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.kanban-tarjeta .precio-kanban {
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.kanban-tarjeta.arrastrando {
+  opacity: 0.5;
+}
+.boton-mover-a {
+  width: 100%;
+  min-height: 44px;
+  margin-top: var(--espacio-1);
+  background: var(--surf2);
+  border: 1px solid var(--line);
+  border-radius: var(--radio-pildora);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* --- Diálogo "Mover a…" / disposiciones --- */
+dialog.dialogo-mover,
+dialog.dialogo-columnas {
+  border: 1px solid var(--line);
+  border-radius: var(--radio);
+  padding: var(--espacio-4);
+  max-width: min(90vw, 420px);
+}
+dialog.dialogo-mover::backdrop,
+dialog.dialogo-columnas::backdrop {
+  background: rgb(0 0 0 / 0.3);
+}
+dialog.dialogo-mover ul,
+dialog.dialogo-columnas form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+dialog.dialogo-mover button {
+  width: 100%;
+  min-height: 44px;
+  text-align: left;
+  background: var(--surf2);
+  border: 1px solid var(--line);
+  border-radius: var(--radio-input);
+  padding: var(--espacio-2);
+}
+
+/* --- Drawer de ficha (<dialog>) --- */
+dialog.drawer-ficha {
+  border: none;
+  padding: 0;
+  margin: 0 0 0 auto;
+  height: 100vh;
+  max-height: 100vh;
+  width: min(480px, 100vw);
+  max-width: 100vw;
+}
+dialog.drawer-ficha::backdrop {
+  background: rgb(0 0 0 / 0.3);
+}
+.drawer-ficha-cuerpo {
+  height: 100%;
+  overflow-y: auto;
+  padding: var(--espacio-4);
+}
+.drawer-ficha-cerrar {
+  position: sticky;
+  top: 0;
+  background: var(--surf);
+  border: 1px solid var(--line);
+  border-radius: var(--radio-pildora);
+  padding: 4px 12px;
+  margin-bottom: var(--espacio-3);
+}
+
+/* --- Ficha (contenido reutilizado en drawer) --- */
+.ficha {
+  background: var(--surf);
+  max-width: 100%;
+}
+.ficha h1 {
+  font-family: var(--fuente-titular);
+  font-size: 22px;
+  margin: 0 0 var(--espacio-1);
+}
+.ficha-meta {
+  color: var(--mut);
+  margin: 0 0 var(--espacio-3);
+}
+.ficha-precio {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 var(--espacio-3);
+}
+.ficha section {
+  margin: var(--espacio-4) 0;
+}
+.ficha section h2 {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mut);
+  margin: 0 0 var(--espacio-2);
+}
+
+/* --- Mapa --- */
+.mapa-contenedor {
+  position: relative;
+  min-height: 0;
+}
+#mapa-leaflet {
+  height: 320px;
+  border-radius: 12px;
+  background: var(--surf2);
+}
+.mapa-cobertura {
+  font-size: 12px;
+  color: var(--mut);
+  margin: var(--espacio-1) 0 0;
+}
+.boton-abrir-mapa {
+  background: var(--surf2);
+  border: 1px solid var(--line);
+  border-radius: var(--radio-pildora);
+  padding: var(--espacio-1) var(--espacio-3);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+dialog.dialogo-columnas form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-2);
+}
+
+/* ======================= Breakpoints ======================= */
+
+/* <768px: la franja de mando pasa a rejilla de 3 columnas (2 filas de 6
+   cifras); cada cifra con su propio ancho evita que los rótulos se solapen. */
+@media (max-width: 767px) {
+  .franja-mando {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--espacio-3) var(--espacio-2);
+    overflow-x: visible;
+  }
+  .cifra-mando {
+    min-width: 0;
+    overflow: hidden;
+  }
+  .cifra-mando .valor {
+    font-size: var(--cifra-min);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .cifra-mando .etiqueta {
+    white-space: normal;
+    overflow-wrap: break-word;
+    line-height: 1.2;
+  }
+  .aviso-crm {
+    grid-column: 1 / -1;
+    margin-left: 0;
+  }
+}
+
+/* ≤480px: una columna, tarjetas */
+@media (max-width: 480px) {
+  .boton-abrir-filtros {
+    display: block;
+  }
+  #zona-filtros > .barra-filtros {
+    display: none;
+  }
+  .kanban {
+    display: none;
+  }
+}
+
+/* 481-767px: tarjetas también */
+@media (min-width: 481px) and (max-width: 767px) {
+  .boton-abrir-filtros {
+    display: block;
+  }
+  #zona-filtros > .barra-filtros {
+    display: none;
+  }
+  .kanban {
+    display: none;
+  }
+}
+
+/* 768-1199px: tabla compacta (sin kanban) */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .lista-tarjetas {
+    display: none;
+  }
+  .kanban {
+    display: none;
+  }
+}
+
+/* ≥1200px: tabla + kanban disponibles */
+@media (min-width: 1200px) {
+  .lista-tarjetas {
+    display: none;
+  }
+  .boton-abrir-filtros {
+    display: none;
+  }
+}
+
+/* <768px: ocultar tabla, mostrar tarjetas */
+@media (max-width: 767px) {
+  .tabla-densa-envoltorio {
+    display: none;
+  }
+}
+
+/* --- Avisos flotantes de error (ver aviso.ts) --- */
+.avisos-flotantes {
+  position: fixed;
+  bottom: var(--espacio-4);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espacio-1);
+  max-width: min(90vw, 420px);
+}
+.aviso-flotante {
+  background: var(--tinta-honda);
+  color: var(--hueso);
+  border: 1px solid var(--red);
+  border-radius: var(--radio-input);
+  padding: var(--espacio-2) var(--espacio-3);
+  font-size: 13px;
+  margin: 0;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.2);
+}

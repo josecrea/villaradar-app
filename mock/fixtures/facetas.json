@@ -1,0 +1,13 @@
+{
+  "zonas": ["Adeje", "Arona", "Guía de Isora", "Santiago del Teide", "Granadilla de Abona"],
+  "tipos": ["chalet", "atico", "villa", "casa", "piso"],
+  "portales": ["idealista", "fotocasa", "pisos"],
+  "anunciantes": ["particular", "agencia"],
+  "porEtapa": {
+    "novedad": 1,
+    "contactado": 1,
+    "en_espera": 1,
+    "captado": 1,
+    "rechazado": 1
+  }
+}
