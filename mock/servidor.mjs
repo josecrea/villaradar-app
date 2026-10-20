@@ -125,7 +125,7 @@ function validaValoracion(c) {
   if (c.zona !== undefined && (typeof c.zona !== "string" || c.zona.trim().length < 1 || c.zona.length > 60)) malo("zona");
   if (c.estado !== undefined && !ESTADOS_VALIDOS.includes(c.estado)) malo("estado");
   if (c.listingId !== undefined && (typeof c.listingId !== "string" || c.listingId.length < 1 || c.listingId.length > 80)) malo("listingId");
-  if (!enteroEn(c.m2, 10, 10000)) malo("m2");
+  if (!(typeof c.m2 === "number" && c.m2 >= 10 && c.m2 <= 10000)) malo("m2");
   if (!enteroEn(c.habitaciones, 0, 20)) malo("habitaciones");
   if (!enteroEn(c.banos, 0, 10)) malo("banos");
   if (c.refCatastral !== undefined && !/^[0-9A-Z]{14}([0-9A-Z]{4}([0-9A-Z]{2})?)?$/.test(String(c.refCatastral).toUpperCase())) {

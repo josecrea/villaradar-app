@@ -74,6 +74,13 @@ function enteroEnRango(texto: string, min: number, max: number): number | null {
   return n >= min && n <= max ? n : null;
 }
 
+// Decimales como la API (z.number()): admite coma o punto, máx. 2 decimales.
+function decimalEnRango(texto: string, min: number, max: number): number | null {
+  if (!/^\d+([.,]\d{1,2})?$/.test(texto)) return null;
+  const n = Number(texto.replace(",", "."));
+  return n >= min && n <= max ? n : null;
+}
+
 type Resultado = { entrada: EntradaValoracion; errores: never[] } | { entrada: null; errores: Array<[Clave, string]> };
 
 function leeEntrada(c: Record<Clave, Control>, listingId: string | null): Resultado {
@@ -88,8 +95,8 @@ function leeEntrada(c: Record<Clave, Control>, listingId: string | null): Result
   if (municipio.length < 2 || municipio.length > 60) errores.push(["municipio", "Indica el municipio (2 a 60 caracteres)."]);
   const zona = v("zona");
   if (zona.length > 60) errores.push(["zona", "La zona admite 60 caracteres como máximo."]);
-  const m2 = enteroEnRango(v("m2"), 10, 10000);
-  if (m2 === null) errores.push(["m2", "Superficie: número entero entre 10 y 10000."]);
+  const m2 = decimalEnRango(v("m2"), 10, 10000);
+  if (m2 === null) errores.push(["m2", "Superficie: número entre 10 y 10000 (admite decimales, p. ej. 93,5)."]);
   const hab = enteroEnRango(v("habitaciones"), 0, 20);
   if (hab === null) errores.push(["habitaciones", "Habitaciones: número entero entre 0 y 20."]);
   const banos = enteroEnRango(v("banos"), 0, 10);
@@ -337,7 +344,9 @@ function creaFormulario(): Campos {
   opciones(estado, ESTADOS);
   campo("estado", "Estado", estado);
 
-  campo("m2", "Superficie (m²)", entero());
+  const m2 = entero();
+  m2.inputMode = "decimal";
+  campo("m2", "Superficie (m²)", m2);
   campo("habitaciones", "Habitaciones", entero());
   campo("banos", "Baños", entero());
   campo("refCatastral", "Referencia catastral (opcional)", texto(), "14, 18 o 20 caracteres.");
@@ -407,7 +416,6 @@ export function pintaValoracion(main: HTMLElement): void {
   articulo.appendChild(campos.formulario);
 
   const previa = el("section", "valoracion-previa");
-  previa.setAttribute("aria-live", "polite");
   articulo.appendChild(previa);
   main.appendChild(articulo);
 

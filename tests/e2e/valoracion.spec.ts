@@ -81,6 +81,65 @@ test("un 400 de la API marca los campos que indica", async ({ page }) => {
   await expect(page.getByRole("alert").filter({ hasText: "Revisa los campos" })).toBeVisible();
 });
 
+test("un 401 al descargar el PDF devuelve al login y borra la sesión", async ({ page }) => {
+  await entra(page, "#/valoracion");
+  await rellena(page);
+  await page.getByRole("button", { name: "Calcular" }).click();
+  const boton = page.getByRole("button", { name: "Descargar PDF" });
+  await expect(boton).toBeVisible();
+  await page.route("**/valoracion/pdf", (route) =>
+    route.fulfill({ status: 401, contentType: "application/json", body: JSON.stringify({ error: "credenciales" }) }),
+  );
+  await boton.click();
+  await expect(page.getByLabel("Usuario")).toBeVisible();
+  expect(await page.evaluate(() => [sessionStorage.getItem("vr.token"), sessionStorage.getItem("vr.sesion")])).toEqual([null, null]);
+});
+
+test("un 401 al calcular devuelve al login y borra la sesión", async ({ page }) => {
+  await entra(page, "#/valoracion");
+  await rellena(page);
+  await page.route("**/valoracion", (route) =>
+    route.fulfill({ status: 401, contentType: "application/json", body: JSON.stringify({ error: "credenciales" }) }),
+  );
+  await page.getByRole("button", { name: "Calcular" }).click();
+  await expect(page.getByLabel("Usuario")).toBeVisible();
+  expect(await page.evaluate(() => sessionStorage.getItem("vr.sesion"))).toBeNull();
+});
+
+for (const [escrito, esperado] of [
+  ["93,5", 93.5],
+  ["93.5", 93.5],
+] as const) {
+  test(`m² decimales: «${escrito}» se envía como ${esperado}`, async ({ page }) => {
+    await entra(page, "#/valoracion");
+    await rellena(page);
+    await page.getByLabel("Superficie (m²)").fill(escrito);
+    const [peticion] = await Promise.all([
+      page.waitForRequest((r) => r.url().endsWith("/valoracion") && r.method() === "POST"),
+      page.getByRole("button", { name: "Calcular" }).click(),
+    ]);
+    expect(peticion.postDataJSON().m2).toBe(esperado);
+    await expect(page.locator(".valoracion-previa")).toContainText("299.000");
+  });
+}
+
+test("m² con texto no numérico se rechaza en el cliente con mensaje claro", async ({ page }) => {
+  await entra(page, "#/valoracion");
+  await rellena(page);
+  await page.getByLabel("Superficie (m²)").fill("9x");
+  await page.getByRole("button", { name: "Calcular" }).click();
+  await expect(page.locator("#vf-m2-error")).toContainText("entre 10 y 10000");
+});
+
+test("la vista previa no usa aria-live y el foco va al encabezado", async ({ page }) => {
+  await entra(page, "#/valoracion");
+  await rellena(page);
+  await page.getByRole("button", { name: "Calcular" }).click();
+  await expect(page.locator(".valoracion-previa")).toContainText("299.000");
+  await expect(page.locator(".valoracion-previa")).not.toHaveAttribute("aria-live", /.+/);
+  await expect(page.getByRole("heading", { name: "Vista previa" })).toBeFocused();
+});
+
 test("desde una ficha, el botón lleva a la valoración con datos precargados", async ({ page }, testInfo) => {
   await entra(page, "#/captacion");
   await expect(page.locator(".franja-mando")).toBeVisible();
