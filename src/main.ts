@@ -1,6 +1,7 @@
 import "./estilos/tokens.css";
 import "./estilos/base.css";
 import "./estilos/componentes.css";
+import { EVENTO_SESION_EXPIRADA } from "./api/base";
 import { sesionGuardada, pintaFormularioLogin, cerrarSesionLocal } from "./auth/login";
 import { pintaMenu } from "./vistas/menu";
 import { pintaCaptacion } from "./vistas/captacion";
@@ -60,4 +61,5 @@ function pintaApp(): void {
 }
 
 window.addEventListener("hashchange", pintaApp);
+window.addEventListener(EVENTO_SESION_EXPIRADA, pintaApp);
 pintaApp();

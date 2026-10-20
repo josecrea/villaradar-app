@@ -25,3 +25,12 @@ export function setToken(token: string): void {
 export function clearToken(): void {
   sessionStorage.removeItem(TOKEN_KEY);
 }
+
+export const EVENTO_SESION_EXPIRADA = "vr:sesion-expirada";
+
+// 401 con sesión: borra token Y sesión guardada y avisa a la app para volver al login.
+export function sesionExpirada(): void {
+  sessionStorage.removeItem(TOKEN_KEY);
+  sessionStorage.removeItem("vr.sesion");
+  window.dispatchEvent(new Event(EVENTO_SESION_EXPIRADA));
+}
