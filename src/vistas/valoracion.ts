@@ -1,0 +1,658 @@
+// Vista #/valoracion: formulario, vista previa del cálculo y descarga del PDF.
+// Solo createElement y textContent (nada de HTML en cadena).
+import { valora, descargaPdfValoracion, inmueble, facetas, ErrorApi } from "../api/cliente";
+import { IDIOMAS } from "../api/tipos";
+import type {
+  CodigoLimite,
+  EntradaValoracion,
+  Idioma,
+  SerieMensual,
+  TablaZona,
+  TipoInmueble,
+  Testigo,
+  ValoracionRespuesta,
+} from "../api/tipos";
+
+const NOMBRE_IDIOMA: Record<Idioma, string> = {
+  es: "Español",
+  en: "English",
+  it: "Italiano",
+  de: "Deutsch",
+  fr: "Français",
+  nl: "Nederlands",
+};
+
+const TIPOS: Array<[TipoInmueble, string]> = [
+  ["piso", "Piso"],
+  ["atico", "Ático"],
+  ["duplex", "Dúplex"],
+  ["estudio", "Estudio"],
+  ["casa", "Casa"],
+  ["chalet", "Chalet"],
+];
+
+const ESTADOS: Array<[EntradaValoracion["estado"], string]> = [
+  ["segunda_mano", "Segunda mano"],
+  ["obra_nueva", "Obra nueva"],
+];
+
+const MAX_OBSERVACIONES = 1000; // zod de la API: 1000 (el encargo decía 1200)
+// Rangos = zod de la API (src/informe/entrada.ts), tomando el más estricto cuando
+// el encargo y el zod difieren (ver PR). La API es .strict().
+const RE_CP = /^38\d{3}$/;
+const RE_REF_CATASTRAL = /^[0-9A-Z]{14}([0-9A-Z]{4}([0-9A-Z]{2})?)?$/;
+
+type Clave = keyof EntradaValoracion;
+type Control = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+
+// "always": en es-ES, 4 cifras no llevan punto por defecto (3149); así todo sale con miles (3.149).
+// El lib de TS 5.7 solo tipa boolean; los navegadores actuales aceptan "always".
+const numero = new Intl.NumberFormat("es-ES", {
+  maximumFractionDigits: 0,
+  useGrouping: "always" as unknown as boolean,
+});
+const decimal = new Intl.NumberFormat("es-ES", { maximumFractionDigits: 1 });
+const decimalConSigno = new Intl.NumberFormat("es-ES", { maximumFractionDigits: 1, signDisplay: "exceptZero" });
+const fmtEuro = (n: number): string => `${numero.format(n)} €`;
+
+// Dato ausente = «n/d» (no hay dato); «n/a» = no aplica. Un null NUNCA se pinta como 0.
+const ND = "n/d";
+const NA = "n/a";
+const aEuro = (n: number | null): string => (n === null ? ND : fmtEuro(n));
+const aNumero = (n: number | null): string => (n === null ? ND : numero.format(n));
+const aEntero = (n: number | null): string => (n === null ? ND : String(n));
+
+// --- utilidades de DOM -------------------------------------------------------
+
+function el<K extends keyof HTMLElementTagNameMap>(
+  etiqueta: K,
+  clase?: string,
+  texto?: string,
+): HTMLElementTagNameMap[K] {
+  const nodo = document.createElement(etiqueta);
+  if (clase) nodo.className = clase;
+  if (texto !== undefined) nodo.textContent = texto;
+  return nodo;
+}
+
+function opciones<T extends string>(select: HTMLSelectElement, lista: Array<[T, string]>): void {
+  for (const [valor, etiqueta] of lista) {
+    const o = el("option", undefined, etiqueta);
+    o.value = valor;
+    select.appendChild(o);
+  }
+}
+
+// --- validación (mismas reglas que el zod de la API) ------------------------
+
+function enteroEnRango(texto: string, min: number, max: number): number | null {
+  if (!/^\d+$/.test(texto)) return null;
+  const n = Number(texto);
+  return n >= min && n <= max ? n : null;
+}
+
+// Decimales como la API (z.number()): admite coma o punto, máx. 2 decimales.
+function decimalEnRango(texto: string, min: number, max: number): number | null {
+  if (!/^\d+([.,]\d{1,2})?$/.test(texto)) return null;
+  const n = Number(texto.replace(",", "."));
+  return n >= min && n <= max ? n : null;
+}
+
+type Resultado = { entrada: EntradaValoracion; errores: never[] } | { entrada: null; errores: Array<[Clave, string]> };
+
+function leeEntrada(c: Record<Clave, Control>, listingId: string | null): Resultado {
+  const errores: Array<[Clave, string]> = [];
+  const v = (k: Clave): string => c[k].value.trim();
+
+  const direccion = v("direccion");
+  if (direccion.length < 3 || direccion.length > 160) errores.push(["direccion", "Indica la dirección (3 a 160 caracteres)."]);
+  const cp = v("cp");
+  if (!RE_CP.test(cp)) errores.push(["cp", "El código postal debe ser 38 seguido de tres cifras."]);
+  const municipio = v("municipio");
+  if (municipio.length < 2 || municipio.length > 60) errores.push(["municipio", "Indica el municipio (2 a 60 caracteres)."]);
+  const zona = v("zona");
+  if (zona.length > 60) errores.push(["zona", "La zona admite 60 caracteres como máximo."]);
+  const m2 = decimalEnRango(v("m2"), 10, 10000);
+  if (m2 === null) errores.push(["m2", "Superficie: número entre 10 y 10000 (admite decimales, p. ej. 93,5)."]);
+  const hab = enteroEnRango(v("habitaciones"), 0, 20);
+  if (hab === null) errores.push(["habitaciones", "Habitaciones: número entero entre 0 y 20."]);
+  const banos = enteroEnRango(v("banos"), 0, 10);
+  if (banos === null) errores.push(["banos", "Baños: número entero entre 0 y 10."]);
+
+  const ref = v("refCatastral").toUpperCase();
+  if (ref && !RE_REF_CATASTRAL.test(ref)) {
+    errores.push(["refCatastral", "Referencia catastral de 14, 18 o 20 caracteres (cifras y letras)."]);
+  }
+  const precioTexto = v("precioPropietario");
+  const precio = precioTexto ? enteroEnRango(precioTexto, 10_000, 20_000_000) : null;
+  if (precioTexto && precio === null) errores.push(["precioPropietario", "Precio: número entero entre 10000 y 20000000 €."]);
+  const obs = c.observaciones.value.trim();
+  if (obs.length > MAX_OBSERVACIONES) {
+    errores.push(["observaciones", `Observaciones: ${MAX_OBSERVACIONES} caracteres como máximo.`]);
+  }
+
+  if (errores.length > 0 || m2 === null || hab === null || banos === null) {
+    return { entrada: null, errores };
+  }
+  // Lista blanca explícita: la API rechaza claves desconocidas.
+  const entrada: EntradaValoracion = {
+    idioma: c.idioma.value as Idioma,
+    direccion,
+    cp,
+    municipio,
+    tipo: c.tipo.value as TipoInmueble,
+    estado: c.estado.value as EntradaValoracion["estado"],
+    m2,
+    habitaciones: hab,
+    banos,
+  };
+  if (zona) entrada.zona = zona;
+  if (ref) entrada.refCatastral = ref;
+  if (precio !== null) entrada.precioPropietario = precio;
+  if (obs) entrada.observaciones = obs;
+  if (listingId) entrada.listingId = listingId;
+  return { entrada, errores: [] };
+}
+
+// --- vista previa -----------------------------------------------------------
+
+function fila(dl: HTMLElement, etiqueta: string, valor: string, clase?: string): void {
+  dl.appendChild(el("dt", undefined, etiqueta));
+  dl.appendChild(el("dd", clase ? `tabular-nums ${clase}` : "tabular-nums", valor));
+}
+
+function bloque(titulo: string, id: string): { seccion: HTMLElement; dl: HTMLElement } {
+  const seccion = el("section", "valoracion-bloque");
+  seccion.setAttribute("aria-labelledby", id);
+  const h = el("h3", undefined, titulo);
+  h.id = id;
+  seccion.appendChild(h);
+  const dl = el("dl", "valoracion-datos");
+  seccion.appendChild(dl);
+  return { seccion, dl };
+}
+
+function bloqueSuperficie(r: ValoracionRespuesta): HTMLElement {
+  const { seccion, dl } = bloque("Superficie", "vp-superficie");
+  const s = r.superficie;
+  fila(dl, "Declarada", `${numero.format(s.m2Declarados)} m²`);
+  fila(dl, "Catastro", s.m2Catastro === null ? "Sin dato" : `${numero.format(s.m2Catastro)} m²`);
+  if (s.desviacionPct !== null) fila(dl, "Desviación", `${decimal.format(s.desviacionPct)} %`);
+  fila(dl, "Base de cálculo", `${numero.format(s.m2Base)} m² (${s.origenBase === "catastro" ? "Catastro" : "declarada"})`);
+  // Año y zona solo si hay Catastro: con Catastro y sin dato, «n/d» (nunca se omite ni se inventa).
+  if (s.catastro === "ok") {
+    fila(dl, "Año de construcción (Catastro)", s.anioConstruccion === null ? ND : String(s.anioConstruccion));
+    fila(dl, "Zona según Catastro", s.zonaCatastro ?? ND);
+  }
+  return seccion;
+}
+
+function bloqueEscriturado(r: ValoracionRespuesta): HTMLElement {
+  const { seccion, dl } = bloque("Precios escriturados", "vp-escriturado");
+  const e = r.escriturado;
+  if (!e) {
+    dl.appendChild(el("dt", undefined, "Escriturado"));
+    dl.appendChild(el("dd", undefined, "Sin datos para este código postal"));
+    return seccion;
+  }
+  fila(dl, "€/m²", fmtEuro(e.eurM2));
+  fila(dl, "Valor", fmtEuro(e.valor));
+  fila(dl, "Fuente", e.fuente === "arcgis" ? "Consulta en línea" : "Copia local");
+  fila(dl, "Fecha", e.fecha);
+  if (e.compraventas !== null) fila(dl, "Compraventas", numero.format(e.compraventas));
+  return seccion;
+}
+
+function bloqueAnuncios(r: ValoracionRespuesta): HTMLElement {
+  const { seccion, dl } = bloque("Anuncios comparables", "vp-anuncios");
+  fila(dl, "Anuncios", numero.format(r.anuncios.n));
+  if (r.anuncios.eurM2) fila(dl, "€/m² (p25 · p50 · p75)", [r.anuncios.eurM2.p25, r.anuncios.eurM2.p50, r.anuncios.eurM2.p75].map(numero.format).join(" · "));
+  if (r.anuncios.valor) fila(dl, "Valor (p25 · p50 · p75)", [r.anuncios.valor.p25, r.anuncios.valor.p50, r.anuncios.valor.p75].map(fmtEuro).join(" · "));
+  fila(dl, "Criterios relajados", r.anuncios.relajado.length > 0 ? r.anuncios.relajado.join(", ") : "Ninguno");
+  return seccion;
+}
+
+function bloquePropuesta(r: ValoracionRespuesta): HTMLElement {
+  const { seccion, dl } = bloque("Propuesta de precio", "vp-propuesta");
+  const p = r.propuesta;
+  const sinCifras = p.ventaRapida === null && p.salida === null && p.techo === null && p.fueraDeMercado === null;
+  if (p.abstencion || sinCifras) {
+    seccion.appendChild(el("p", "valoracion-sin-cifra", "Sin cifra: no hay evidencia suficiente"));
+    return seccion;
+  }
+  // Las cuatro cifras siempre; la que no se puede calcular dice «n/d» (nunca 0).
+  fila(dl, "Venta rápida", aEuro(p.ventaRapida));
+  fila(dl, "Salida recomendada", aEuro(p.salida), "cifra-destacada");
+  fila(dl, "Techo (poco probable)", aEuro(p.techo));
+  fila(dl, "Fuera de mercado", p.fueraDeMercado === null ? ND : `más de ${fmtEuro(p.fueraDeMercado)}`);
+  return seccion;
+}
+
+function celda(fila_: HTMLElement, texto: string, clase?: string): void {
+  fila_.appendChild(el("td", clase, texto));
+}
+
+function cabecera(tr: HTMLElement, textos: string[]): void {
+  for (const t of textos) {
+    const th = el("th", undefined, t);
+    th.scope = "col";
+    tr.appendChild(th);
+  }
+}
+
+/** Sección con tabla desplazable (foco con teclado en pantallas estrechas). */
+function seccionTabla(titulo: string, id: string, etiqueta: string, clase: string): { seccion: HTMLElement; tabla: HTMLTableElement } {
+  const seccion = el("section", "valoracion-bloque");
+  seccion.setAttribute("aria-labelledby", id);
+  const h = el("h3", undefined, titulo);
+  h.id = id;
+  seccion.appendChild(h);
+  const marco = el("div", "tabla-desplazable");
+  marco.tabIndex = 0;
+  marco.setAttribute("role", "region");
+  marco.setAttribute("aria-label", etiqueta);
+  const tabla = el("table", clase);
+  marco.appendChild(tabla);
+  seccion.appendChild(marco);
+  return { seccion, tabla };
+}
+
+const TEXTO_ESTADO: Record<Testigo["estado"], string> = { activo: "Activo", inactivo: "Inactivo", desconocido: ND };
+
+function textoDias(t: Testigo): string {
+  if (t.dias === null) return ND;
+  return t.dias.minimo ? `al menos ${numero.format(t.dias.n)}` : numero.format(t.dias.n);
+}
+
+function tablaTestigos(testigos: Testigo[]): HTMLElement {
+  const { seccion, tabla } = seccionTabla("Testigos", "vp-testigos", "Tabla de testigos", "tabla-testigos");
+  const cab = el("tr");
+  cabecera(cab, ["Estado", "Días", "Precio", "€/m²", "m²", "Hab.", "Baños", "Zona", "Portal"]);
+  tabla.appendChild(el("thead")).appendChild(cab);
+  const cuerpo = el("tbody");
+  for (const t of testigos) {
+    const tr = el("tr");
+    celda(tr, TEXTO_ESTADO[t.estado]);
+    celda(tr, textoDias(t), "tabular-nums");
+    celda(tr, fmtEuro(t.precio), "tabular-nums");
+    celda(tr, numero.format(t.eurM2), "tabular-nums");
+    celda(tr, numero.format(t.m2), "tabular-nums");
+    celda(tr, aEntero(t.hab), "tabular-nums");
+    celda(tr, aEntero(t.banos), "tabular-nums");
+    celda(tr, t.zona);
+    celda(tr, t.portal);
+    cuerpo.appendChild(tr);
+  }
+  tabla.appendChild(cuerpo);
+  return seccion;
+}
+
+function tablaZona(t: TablaZona): HTMLElement {
+  const { seccion, tabla } = seccionTabla("Tu inmueble frente a los comparables", "vp-zona", "Tabla del inmueble frente a los comparables", "tabla-zona");
+  const cab = el("tr");
+  cab.appendChild(el("td")); // esquina: la columna de rótulos de fila no es una de las 6 de datos
+  cabecera(cab, ["Precio", "m²", "Hab.", "Baños", "€/m²", "% dif. €/m²"]);
+  tabla.appendChild(el("thead")).appendChild(cab);
+
+  const cuerpo = el("tbody");
+  const i = t.inmueble;
+  const c = t.comparablesP50;
+  const rotulo = (tr: HTMLElement, principal: string, secundario?: string): void => {
+    const th = el("th", undefined, principal);
+    th.scope = "row";
+    if (secundario) th.appendChild(el("span", "rotulo-aparte", secundario));
+    tr.appendChild(th);
+  };
+
+  const f1 = el("tr");
+  rotulo(f1, "Este inmueble", i.origenPrecio === null ? undefined : i.origenPrecio === "precio_propietario" ? "precio pedido" : "salida recomendada");
+  celda(f1, aEuro(i.precio), "tabular-nums");
+  celda(f1, aNumero(i.m2), "tabular-nums");
+  celda(f1, aEntero(i.hab), "tabular-nums");
+  celda(f1, aEntero(i.banos), "tabular-nums");
+  celda(f1, aNumero(i.eurM2), "tabular-nums");
+  celda(f1, t.difEurM2Pct === null ? NA : `${decimalConSigno.format(t.difEurM2Pct)} %`, "tabular-nums");
+  cuerpo.appendChild(f1);
+
+  const f2 = el("tr");
+  rotulo(f2, `Mediana de ${numero.format(c.n)} comparables`);
+  celda(f2, aEuro(c.precio), "tabular-nums");
+  celda(f2, aNumero(c.m2), "tabular-nums");
+  celda(f2, aEntero(c.hab), "tabular-nums");
+  celda(f2, aEntero(c.banos), "tabular-nums");
+  celda(f2, aNumero(c.eurM2), "tabular-nums");
+  celda(f2, "ref.", "tabular-nums");
+  cuerpo.appendChild(f2);
+  tabla.appendChild(cuerpo);
+
+  if (t.difEurM2Pct === null) {
+    seccion.appendChild(
+      el(
+        "p",
+        "nota-tabla",
+        "Sin precio pedido por el propietario: el precio de esta fila es la salida recomendada, que sale de la propia mediana; la diferencia no aplica.",
+      ),
+    );
+  }
+  return seccion;
+}
+
+const FORMATO_MES = new Intl.DateTimeFormat("es-ES", { month: "short", year: "numeric", timeZone: "UTC" });
+
+function etiquetaMes(mes: string, hasta: string): string {
+  const [anio, m] = mes.split("-").map(Number);
+  if (anio === undefined || m === undefined || Number.isNaN(anio) || Number.isNaN(m)) return mes;
+  const nombre = FORMATO_MES.format(new Date(Date.UTC(anio, m - 1, 1)));
+  if (mes !== hasta.slice(0, 7)) return nombre;
+  const [a, mm, d] = hasta.split("-");
+  return `${nombre} (hasta el ${d}/${mm}/${a})`;
+}
+
+function tablaSerie(serie: SerieMensual, municipio: string): HTMLElement {
+  const { seccion, tabla } = seccionTabla("€/m² de oferta por mes de captación", "vp-serie", "Serie mensual del €/m² de oferta", "tabla-serie");
+  const ambito = serie.ambito === "zona" && serie.zona ? `Zona: ${serie.zona}` : `Municipio: ${municipio}`;
+  seccion.appendChild(el("p", "nota-tabla", ambito));
+  const cab = el("tr");
+  cabecera(cab, ["Mes", "Anuncios", "€/m² (mediana)", "Variación"]);
+  tabla.appendChild(el("thead")).appendChild(cab);
+  const cuerpo = el("tbody");
+  for (const m of serie.meses) {
+    const tr = el("tr");
+    celda(tr, etiquetaMes(m.mes, serie.hasta));
+    celda(tr, numero.format(m.n), "tabular-nums"); // un recuento sí puede ser 0: es un dato
+    celda(tr, aNumero(m.eurM2P50), "tabular-nums");
+    celda(tr, m.variacionPct === null ? ND : `${decimalConSigno.format(m.variacionPct)} %`, "tabular-nums");
+    cuerpo.appendChild(tr);
+  }
+  tabla.appendChild(cuerpo);
+  seccion.appendChild(
+    el(
+      "p",
+      "nota-tabla",
+      `Mediana del €/m² de oferta de los anuncios que VillaRadar vio por primera vez cada mes. No es un índice de precios: la captación empezó en julio de 2026 y se amplió a más portales en septiembre. Meses con menos de ${serie.nMinimoMes} anuncios: ${ND}. Septiembre de 2026 incluye el alta inicial del stock existente.`,
+    ),
+  );
+  return seccion;
+}
+
+/** Límites de datos: se imprimen junto a su sección, con el texto que manda la API. */
+function limites(r: ValoracionRespuesta, codigos: CodigoLimite[]): HTMLElement | null {
+  const lista = r.limites.filter((l) => codigos.includes(l.codigo));
+  if (lista.length === 0) return null;
+  const caja = el("div", "valoracion-limites");
+  for (const l of lista) {
+    const p = el("p", undefined, l.texto);
+    p.setAttribute("role", "note");
+    caja.appendChild(p);
+  }
+  return caja;
+}
+
+const LIMITES_TESTIGOS: CodigoLimite[] = ["testigos_menos_de_11", "dias_sin_dato", "estado_sin_vigencia"];
+const LIMITES_SERIE: CodigoLimite[] = ["serie_meses_insuficientes", "inventario_no_disponible"];
+
+function pintaPrevia(destino: HTMLElement, r: ValoracionRespuesta, alDescargar: (b: HTMLButtonElement) => void): void {
+  destino.replaceChildren();
+  const titulo = el("h2", undefined, "Vista previa");
+  titulo.tabIndex = -1;
+  destino.appendChild(titulo);
+  const anade = (nodo: HTMLElement | null): void => {
+    if (nodo) destino.appendChild(nodo);
+  };
+  destino.appendChild(bloquePropuesta(r));
+  destino.appendChild(bloqueSuperficie(r));
+  if (r.tablaZona) destino.appendChild(tablaZona(r.tablaZona));
+  destino.appendChild(bloqueEscriturado(r));
+  destino.appendChild(bloqueAnuncios(r));
+  if (r.avisos.length > 0) {
+    const lista = el("ul", "valoracion-avisos");
+    lista.setAttribute("aria-label", "Avisos");
+    for (const a of r.avisos) lista.appendChild(el("li", undefined, a.texto));
+    destino.appendChild(lista);
+  }
+  if (r.testigos.length > 0) destino.appendChild(tablaTestigos(r.testigos));
+  anade(limites(r, LIMITES_TESTIGOS));
+  if (r.serie && r.serie.meses.length > 0) destino.appendChild(tablaSerie(r.serie, r.inmueble.municipio));
+  anade(limites(r, LIMITES_SERIE));
+  // Un límite que este front aún no conoce se imprime igualmente: nunca se descarta en silencio.
+  const conocidos = [...LIMITES_TESTIGOS, ...LIMITES_SERIE];
+  anade(limites(r, r.limites.map((l) => l.codigo).filter((c) => !conocidos.includes(c))));
+  const pdf = el("button", "boton-principal", "Descargar PDF");
+  pdf.type = "button";
+  pdf.addEventListener("click", () => alDescargar(pdf));
+  destino.appendChild(pdf);
+  titulo.focus();
+}
+
+// --- formulario -------------------------------------------------------------
+
+interface Campos {
+  controles: Record<Clave, Control>;
+  errores: Record<Clave, HTMLElement>;
+  formulario: HTMLFormElement;
+  datalist: HTMLDataListElement;
+}
+
+function creaFormulario(): Campos {
+  const formulario = el("form", "form-valoracion");
+  formulario.noValidate = true;
+  const controles = {} as Record<Clave, Control>;
+  const errores = {} as Record<Clave, HTMLElement>;
+
+  const campo = (clave: Clave, etiqueta: string, control: Control, ayuda?: string, ancho = false): void => {
+    const caja = el("div", ancho ? "campo campo-ancho" : "campo");
+    control.id = `vf-${clave}`;
+    control.name = clave;
+    const label = el("label", undefined, etiqueta);
+    label.htmlFor = control.id;
+    const error = el("p", "campo-error");
+    error.id = `vf-${clave}-error`;
+    error.hidden = true;
+    caja.appendChild(label);
+    caja.appendChild(control);
+    if (ayuda) {
+      const p = el("p", "campo-ayuda", ayuda);
+      p.id = `vf-${clave}-ayuda`;
+      control.setAttribute("aria-describedby", p.id);
+      caja.appendChild(p);
+    }
+    caja.appendChild(error);
+    formulario.appendChild(caja);
+    controles[clave] = control;
+    errores[clave] = error;
+  };
+
+  const texto = (tipo: "text" | "number" = "text"): HTMLInputElement => {
+    const i = el("input");
+    i.type = tipo;
+    return i;
+  };
+  const entero = (): HTMLInputElement => {
+    const i = texto();
+    i.inputMode = "numeric";
+    i.autocomplete = "off";
+    return i;
+  };
+
+  const idioma = el("select");
+  opciones(idioma, IDIOMAS.map((c): [Idioma, string] => [c, NOMBRE_IDIOMA[c]]));
+  campo("idioma", "Idioma del informe", idioma);
+
+  campo("direccion", "Dirección", texto(), undefined, true);
+
+  const cp = entero();
+  cp.setAttribute("pattern", "38\\d{3}");
+  cp.maxLength = 5;
+  campo("cp", "Código postal", cp);
+
+  const municipio = texto();
+  const datalist = el("datalist");
+  datalist.id = "vf-municipios";
+  municipio.setAttribute("list", datalist.id);
+  campo("municipio", "Municipio", municipio);
+  formulario.appendChild(datalist);
+
+  campo("zona", "Zona (opcional)", texto());
+
+  const tipo = el("select");
+  opciones(tipo, TIPOS);
+  campo("tipo", "Tipo de inmueble", tipo);
+
+  const estado = el("select");
+  opciones(estado, ESTADOS);
+  campo("estado", "Estado", estado);
+
+  const m2 = entero();
+  m2.inputMode = "decimal";
+  campo("m2", "Superficie (m²)", m2);
+  campo("habitaciones", "Habitaciones", entero());
+  campo("banos", "Baños", entero());
+  campo("refCatastral", "Referencia catastral (opcional)", texto(), "14, 18 o 20 caracteres.");
+  campo("precioPropietario", "Precio del propietario, € (opcional)", entero());
+
+  const obs = el("textarea");
+  obs.rows = 4;
+  obs.maxLength = MAX_OBSERVACIONES;
+  campo("observaciones", "Observaciones (opcional)", obs, undefined, true);
+
+  return { controles, errores, formulario, datalist };
+}
+
+function marcaError(c: Campos, clave: Clave, mensaje: string): void {
+  const control = c.controles[clave];
+  const error = c.errores[clave];
+  if (!control || !error) return;
+  error.textContent = mensaje;
+  error.hidden = false;
+  control.setAttribute("aria-invalid", "true");
+  const ids = [`vf-${clave}-error`];
+  if (document.getElementById(`vf-${clave}-ayuda`)) ids.push(`vf-${clave}-ayuda`);
+  control.setAttribute("aria-describedby", ids.join(" "));
+}
+
+function limpiaErrores(c: Campos): void {
+  for (const clave of Object.keys(c.errores) as Clave[]) {
+    const control = c.controles[clave];
+    c.errores[clave].hidden = true;
+    c.errores[clave].textContent = "";
+    control.removeAttribute("aria-invalid");
+    if (document.getElementById(`vf-${clave}-ayuda`)) control.setAttribute("aria-describedby", `vf-${clave}-ayuda`);
+    else control.removeAttribute("aria-describedby");
+  }
+}
+
+function listingDeLaUrl(): string | null {
+  const qs = location.hash.split("?")[1] ?? "";
+  const id = new URLSearchParams(qs).get("listing");
+  return id && id.length <= 80 ? id : null;
+}
+
+async function precarga(c: Campos, id: string): Promise<void> {
+  const ficha = await inmueble(id);
+  c.controles.municipio.value = ficha.municipio;
+  if (ficha.m2 !== null) c.controles.m2.value = String(ficha.m2);
+  if (ficha.hab !== null) c.controles.habitaciones.value = String(ficha.hab);
+  if (ficha.banos !== null) c.controles.banos.value = String(ficha.banos);
+  if (TIPOS.some(([valor]) => valor === ficha.tipo)) c.controles.tipo.value = ficha.tipo;
+}
+
+export function pintaValoracion(main: HTMLElement): void {
+  main.replaceChildren();
+  const articulo = el("article", "valoracion");
+  articulo.appendChild(el("h1", undefined, "Informe de valoración"));
+
+  const campos = creaFormulario();
+  const listingId = listingDeLaUrl();
+
+  const errorGeneral = el("p", "campo-error valoracion-error");
+  errorGeneral.setAttribute("role", "alert");
+  errorGeneral.hidden = true;
+  const calcular = el("button", "boton-principal", "Calcular");
+  calcular.type = "submit";
+  campos.formulario.appendChild(errorGeneral);
+  campos.formulario.appendChild(calcular);
+  articulo.appendChild(campos.formulario);
+
+  const previa = el("section", "valoracion-previa");
+  articulo.appendChild(previa);
+  main.appendChild(articulo);
+
+  facetas()
+    .then((f) => {
+      for (const zona of f.zonas) {
+        const o = el("option");
+        o.value = zona;
+        campos.datalist.appendChild(o);
+      }
+    })
+    .catch(() => undefined); // el datalist es una ayuda: sin él se escribe el municipio a mano
+
+  if (listingId) {
+    precarga(campos, listingId).catch(() => {
+      errorGeneral.textContent = "No se pudo precargar el inmueble. Rellena los datos a mano.";
+      errorGeneral.hidden = false;
+    });
+  }
+
+  let ultima: EntradaValoracion | null = null;
+
+  const mensajeApi = (e: unknown): string =>
+    e instanceof ErrorApi && e.status === 400
+      ? "Revisa los campos marcados."
+      : "No se pudo completar la operación. Inténtalo de nuevo.";
+
+  const marcaCamposApi = (e: unknown): void => {
+    if (!(e instanceof ErrorApi) || !e.campos) return;
+    for (const campo of e.campos) {
+      if (campo in campos.controles) marcaError(campos, campo as Clave, "Valor no válido.");
+    }
+  };
+
+  campos.formulario.addEventListener("submit", (ev) => {
+    ev.preventDefault();
+    limpiaErrores(campos);
+    errorGeneral.hidden = true;
+    const r = leeEntrada(campos.controles, listingId);
+    if (r.entrada === null) {
+      for (const [clave, mensaje] of r.errores) marcaError(campos, clave, mensaje);
+      const primero = r.errores[0];
+      if (primero) campos.controles[primero[0]].focus();
+      return;
+    }
+    const entrada = r.entrada;
+    calcular.disabled = true;
+    valora(entrada)
+      .then((resultado) => {
+        ultima = entrada;
+        pintaPrevia(previa, resultado, (boton) => {
+          boton.disabled = true;
+          errorGeneral.hidden = true;
+          descargaPdfValoracion(entrada)
+            .catch((e: unknown) => {
+              errorGeneral.textContent = mensajeApi(e);
+              errorGeneral.hidden = false;
+            })
+            .finally(() => {
+              boton.disabled = false;
+            });
+        });
+      })
+      .catch((e: unknown) => {
+        previa.replaceChildren();
+        marcaCamposApi(e);
+        errorGeneral.textContent = mensajeApi(e);
+        errorGeneral.hidden = false;
+      })
+      .finally(() => {
+        calcular.disabled = false;
+      });
+  });
+
+  // Si se edita el formulario tras calcular, la vista previa queda obsoleta.
+  campos.formulario.addEventListener("input", () => {
+    if (ultima !== null) {
+      ultima = null;
+      previa.replaceChildren();
+    }
+  });
+}

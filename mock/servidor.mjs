@@ -92,6 +92,50 @@ function enviaPng(res, buffer) {
   res.end(buffer);
 }
 
+// PDF mínimo válido (una página en blanco) para probar la descarga.
+const PDF_MINIMO = Buffer.from(
+  "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n" +
+    "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 200 200]>>endobj\n" +
+    "trailer<</Root 1 0 R/Size 4>>\n%%EOF",
+  "latin1",
+);
+
+// Mismas reglas que EntradaValoracion (.strict()) de la API: clave desconocida,
+// campo requerido ausente o fuera de rango => 400 con la lista de campos.
+const IDIOMAS_VALIDOS = ["es", "en", "it", "de", "fr", "nl"];
+const TIPOS_VALIDOS = ["piso", "atico", "duplex", "estudio", "casa", "chalet"];
+const ESTADOS_VALIDOS = ["segunda_mano", "obra_nueva"];
+const CLAVES_VALORACION = new Set([
+  "idioma", "direccion", "cp", "municipio", "zona", "tipo", "estado", "m2",
+  "habitaciones", "banos", "refCatastral", "precioPropietario", "observaciones", "listingId",
+]);
+
+function enteroEn(v, min, max) {
+  return Number.isInteger(v) && v >= min && v <= max;
+}
+
+function validaValoracion(c) {
+  const campos = Object.keys(c).filter((k) => !CLAVES_VALORACION.has(k));
+  const malo = (k) => campos.push(k);
+  if (c.idioma !== undefined && !IDIOMAS_VALIDOS.includes(c.idioma)) malo("idioma");
+  if (typeof c.direccion !== "string" || c.direccion.trim().length < 3 || c.direccion.length > 160) malo("direccion");
+  if (typeof c.cp !== "string" || !/^38\d{3}$/.test(c.cp)) malo("cp");
+  if (typeof c.municipio !== "string" || c.municipio.trim().length < 2 || c.municipio.length > 60) malo("municipio");
+  if (!TIPOS_VALIDOS.includes(c.tipo)) malo("tipo");
+  if (c.zona !== undefined && (typeof c.zona !== "string" || c.zona.trim().length < 1 || c.zona.length > 60)) malo("zona");
+  if (c.estado !== undefined && !ESTADOS_VALIDOS.includes(c.estado)) malo("estado");
+  if (c.listingId !== undefined && (typeof c.listingId !== "string" || c.listingId.length < 1 || c.listingId.length > 80)) malo("listingId");
+  if (!(typeof c.m2 === "number" && c.m2 >= 10 && c.m2 <= 10000)) malo("m2");
+  if (!enteroEn(c.habitaciones, 0, 20)) malo("habitaciones");
+  if (!enteroEn(c.banos, 0, 10)) malo("banos");
+  if (c.refCatastral !== undefined && !/^[0-9A-Z]{14}([0-9A-Z]{4}([0-9A-Z]{2})?)?$/.test(String(c.refCatastral).toUpperCase())) {
+    malo("refCatastral");
+  }
+  if (c.precioPropietario !== undefined && !enteroEn(c.precioPropietario, 10000, 20000000)) malo("precioPropietario");
+  if (c.observaciones !== undefined && (typeof c.observaciones !== "string" || c.observaciones.length > 1000)) malo("observaciones");
+  return campos;
+}
+
 async function manejador(req, res) {
   const url = new URL(req.url, `http://localhost:${PUERTO}`);
 
@@ -226,6 +270,22 @@ async function manejador(req, res) {
   const matchOdoo = ruta.match(/^\/inmueble\/([^/]+)\/odoo$/);
   if (matchOdoo && req.method === "POST") {
     return envia(res, 200, { ok: true, estado: "ok" });
+  }
+
+  if ((ruta === "/valoracion" || ruta === "/valoracion/pdf") && req.method === "POST") {
+    const cuerpo = await leeJson(req);
+    const campos = validaValoracion(cuerpo);
+    if (campos.length > 0) return envia(res, 400, { error: "entrada inválida", campos });
+    if (ruta === "/valoracion/pdf") {
+      res.writeHead(200, {
+        "Content-Type": "application/pdf",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Expose-Headers": "Content-Type",
+      });
+      return res.end(PDF_MINIMO);
+    }
+    const fixture = await cargaFixture("valoracion.json");
+    return envia(res, 200, { ...fixture, idioma: cuerpo.idioma });
   }
 
   if (ruta === "/facetas") return envia(res, 200, await cargaFixture("facetas.json"));

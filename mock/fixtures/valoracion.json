@@ -1,0 +1,207 @@
+{
+  "id": "val-mock-0001",
+  "generadoAt": "2026-10-20T10:00:00.000Z",
+  "idioma": "it",
+  "inmueble": {
+    "direccion": "Calle de ejemplo 1",
+    "cp": "38639",
+    "municipio": "San Miguel de Abona",
+    "zona": null,
+    "tipo": "piso",
+    "estado": "segunda_mano",
+    "habitaciones": 2,
+    "banos": 1,
+    "refCatastral": null,
+    "precioPropietario": null,
+    "observaciones": null
+  },
+  "superficie": {
+    "m2Declarados": 93,
+    "m2Catastro": null,
+    "desviacionPct": null,
+    "m2Base": 93,
+    "origenBase": "declarados",
+    "catastro": "sin_ref",
+    "anioConstruccion": null,
+    "zonaCatastro": null
+  },
+  "escriturado": {
+    "eurM2": 3149,
+    "compraventas": 41,
+    "combo": {
+      "tipo": 9,
+      "clase": 14
+    },
+    "fuente": "arcgis",
+    "fecha": "2026-10-20",
+    "valor": 293000
+  },
+  "anuncios": {
+    "n": 12,
+    "criterios": {
+      "zona": null,
+      "m2Pct": 20,
+      "habDelta": 1,
+      "banosDelta": 1
+    },
+    "relajado": [],
+    "eurM2": {
+      "p25": 3050,
+      "p50": 3220,
+      "p75": 3400
+    },
+    "valor": {
+      "p25": 284000,
+      "p50": 299000,
+      "p75": 316000
+    },
+    "zonaOrigen": "entrada"
+  },
+  "brechaOfertaEscrituraPct": 2.0,
+  "propuesta": {
+    "abstencion": false,
+    "motivo": "anuncios",
+    "ventaRapida": 293000,
+    "salida": 299000,
+    "techo": 316000,
+    "posicionPropietario": null,
+    "fueraDeMercado": 365000
+  },
+  "testigos": [
+    {
+      "estado": "desconocido",
+      "dias": {
+        "n": 21,
+        "minimo": true
+      },
+      "precio": 289000,
+      "eurM2": 3050,
+      "m2": 95,
+      "hab": 2,
+      "banos": 1,
+      "zona": "San Miguel de Abona",
+      "portal": "fotocasa"
+    },
+    {
+      "estado": "desconocido",
+      "dias": null,
+      "precio": 299000,
+      "eurM2": 3220,
+      "m2": 93,
+      "hab": 2,
+      "banos": 2,
+      "zona": "Las Chafiras",
+      "portal": "idealista"
+    },
+    {
+      "estado": "desconocido",
+      "dias": null,
+      "precio": 316000,
+      "eurM2": 3400,
+      "m2": 93,
+      "hab": 3,
+      "banos": 1,
+      "zona": "San Miguel de Abona",
+      "portal": "pisos"
+    }
+  ],
+  "actividadDesde": null,
+  "actividadVisible": false,
+  "tendencia": null,
+  "compradores": null,
+  "tablaZona": {
+    "inmueble": {
+      "precio": 299000,
+      "m2": 93,
+      "hab": 3,
+      "banos": 2,
+      "eurM2": 3215,
+      "origenPrecio": "salida_recomendada"
+    },
+    "comparablesP50": {
+      "precio": 300000,
+      "m2": 92,
+      "hab": 3,
+      "banos": 2,
+      "eurM2": 3220,
+      "n": 12
+    },
+    "difEurM2Pct": null
+  },
+  "serie": {
+    "ambito": "zona",
+    "zona": "Las Chafiras",
+    "nMinimoMes": 5,
+    "desde": "2026-07",
+    "hasta": "2026-10-20",
+    "meses": [
+      {
+        "mes": "2026-07",
+        "n": 2,
+        "eurM2P50": null,
+        "variacionPct": null
+      },
+      {
+        "mes": "2026-08",
+        "n": 0,
+        "eurM2P50": null,
+        "variacionPct": null
+      },
+      {
+        "mes": "2026-09",
+        "n": 7,
+        "eurM2P50": 3180,
+        "variacionPct": null
+      },
+      {
+        "mes": "2026-10",
+        "n": 5,
+        "eurM2P50": 3250,
+        "variacionPct": 2.2
+      }
+    ],
+    "mesesConDato": 2
+  },
+  "avisos": [
+    {
+      "codigo": "sin_catastro",
+      "params": {},
+      "texto": "No se indicó referencia catastral: se usa la superficie declarada."
+    }
+  ],
+  "limites": [
+    {
+      "codigo": "testigos_menos_de_11",
+      "params": {
+        "n": 3
+      },
+      "texto": "Solo hay 3 anuncios comparables en la zona; el objetivo es entre 11 y 16. No se completan con anuncios de otras zonas para no falsear el cálculo."
+    },
+    {
+      "codigo": "dias_sin_dato",
+      "params": {
+        "sinDato": 2,
+        "total": 3
+      },
+      "texto": "Días en mercado: 2 de 3 testigos sin dato (n/d). Solo Fotocasa publica la antigüedad del anuncio; para el resto, VillaRadar aún no registra cuánto tiempo sigue publicado."
+    },
+    {
+      "codigo": "estado_sin_vigencia",
+      "params": {},
+      "texto": "Estado activo/inactivo: n/d. VillaRadar todavía no registra si un anuncio sigue publicado; ningún testigo se presenta como activo ni como vendido."
+    },
+    {
+      "codigo": "serie_meses_insuficientes",
+      "params": {
+        "meses": 2,
+        "minimo": 5
+      },
+      "texto": "Solo 2 meses tienen al menos 5 anuncios: la serie es corta y se completará mes a mes."
+    },
+    {
+      "codigo": "inventario_no_disponible",
+      "params": {},
+      "texto": "Inventario por tamaño (nuevos, retirados, % de actividad): no se publica. Medir retirados exige seguir a diario todo el stock de la zona; VillaRadar aún no lo hace y una tabla sin ese dato sería engañosa."
+    }
+  ]
+}
