@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 
 const URL_MINI_APP = "https://valoracion.zohmip.easypanel.host";
 // Nunca un importe o unos días a cero: un dato ausente es «n/d» (ni «0 €», ni «0 días»).
-const CERO_EURO = /(^|[^\d.,])0\s?€/;
+const CERO_EURO = /(^|[^\d.,])0\s?€|€\s?0(?![\d.,])/;
 
 type Json = Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
 const fixtureBase = (): Json => JSON.parse(readFileSync("mock/fixtures/valoracion.json", "utf-8"));

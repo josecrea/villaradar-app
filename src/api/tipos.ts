@@ -183,7 +183,8 @@ export interface Valoracion {
   testigos: Testigo[];
   serie: SerieMensual | null;
   actividadDesde: string | null; actividadVisible: boolean;
-  tendencia: { periodo: string; variacionAnualPct: number } | null;
+  /** Variación anual del IPV (INE, segunda mano). `ambito` es la comunidad, NO la zona del inmueble (corrección 1, leve 5). */
+  tendencia: { periodo: string; variacionAnualPct: number; ambito: "canarias"; fuente: "INE" } | null;
   compradores: { pctExtranjeros: number; primeraNacionalidad: string | null } | null;
   avisos: Aviso[];
   limites: Limite[];
